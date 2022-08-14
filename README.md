@@ -1,2 +1,2 @@
-# SAEB
-Implementation of SAEB mode of operation in block ciphers
+# saeb
+Implementation of saeb mode of operation in block ciphers
