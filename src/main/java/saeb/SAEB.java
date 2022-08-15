@@ -18,6 +18,8 @@ public class SAEB {
     // Associated data block size in bytes
     public static final int R1 = 8;
     public static final int R2 = 4;
+    public static final int R = 6;
+    public static final int t = 3;
 
     private final AES aes;
 
@@ -40,10 +42,8 @@ public class SAEB {
             state[state.length - 1] ^= 0x01;
             state = hashRound(state,
                     Arrays.copyOfRange(associatedData, i, i + R1));
-        } else if (dif <= 0 || dif >= R1) {
-            throw new IllegalArgumentException("Bad last block dif number: " + dif);
         } else {
-            byte[] lastBlock = createLastBlock(associatedData, i);
+            byte[] lastBlock = createLastHashBlock(associatedData, i);
 
             state[state.length - 1] ^= 0x02;
             state = hashRound(state, lastBlock);
@@ -52,7 +52,7 @@ public class SAEB {
         return hashLastRound(state, nonce);
     }
 
-    private byte[] createLastBlock(byte[] associatedData, int i) {
+    private byte[] createLastHashBlock(byte[] associatedData, int i) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         for (int j = i; j < associatedData.length; j++) {
             stream.write(associatedData[j]);
@@ -78,14 +78,131 @@ public class SAEB {
     }
 
 
-    public byte[] xorFullBlocks(byte[] state, byte[] associated) {
-        if (state.length < associated.length) {
-            throw new IllegalStateException("Kurwa");
+    public byte[] xorFullBlocks(byte[] stated, byte[] smallerBlock) {
+        byte[] temp = new byte[stated.length];
+
+        System.arraycopy(stated, 0, temp, 0, stated.length);
+
+        for (int i = 0; i < smallerBlock.length; i++) {
+            temp[i] = (byte) (stated[i] ^ smallerBlock[i]);
+        }
+        return temp;
+    }
+
+    public byte[] coreEncrypt(byte[] iv, byte[] plaintext) {
+        byte[] state = aes.encrypt(iv);
+        ByteArrayOutputStream ciphertextStream = new ByteArrayOutputStream();
+
+        byte[] messageBlock;
+
+        int i;
+        for (i = 0; i + R < plaintext.length; i = i + R) {
+            messageBlock = Arrays.copyOfRange(plaintext, i, i + R);
+
+            state = xorFullBlocks(state, messageBlock);
+
+            for (int j = 0; j < messageBlock.length; j++) {
+                ciphertextStream.write(state[j]);
+            }
+            state = aes.encrypt(state);
         }
 
-        for (int i = 0; i < associated.length; i++) {
-            state[i] = (byte) (state[i] ^ associated[i]);
+        byte[] lastFullBlock = Arrays.copyOfRange(plaintext, i, i + R);
+
+        int dif = plaintext.length - i;
+        if (dif == R) {
+            state[state.length - 1] ^= 0x01;
+
+            state = xorFullBlocks(state, lastFullBlock);
+
+            for (int j = 0; j < R; j++) {
+                ciphertextStream.write(state[j]);
+            }
+        } else {
+            lastFullBlock[dif] = (byte) 0x80;
+            lastFullBlock[lastFullBlock.length - 1] = 0x02;
+
+            state = xorFullBlocks(state, lastFullBlock);
+
+            for (int j = 0; j < dif; j++) {
+                ciphertextStream.write(state[j]);
+            }
         }
-        return state;
+
+        state = aes.encrypt(state);
+        byte[] tag = Arrays.copyOf(state, t);
+        System.out.println("TAG: " + Arrays.toString(tag));
+
+        return ciphertextStream.toByteArray();
+    }
+
+    public byte[] coreDecrypt(byte[] iv, byte[] ciphertext) {
+        byte[] state = aes.encrypt(iv);
+
+        ByteArrayOutputStream plaintextStream = new ByteArrayOutputStream();
+
+        byte[] ciphertextBlock;
+
+        byte[] plaintextBlock;
+
+        int i;
+        for (i = 0; i + R < ciphertext.length; i = i + R) {
+            ciphertextBlock = Arrays.copyOfRange(ciphertext, i, i + R);
+            plaintextBlock = Arrays.copyOfRange(xorFullBlocks(state, ciphertextBlock), 0, R);
+
+            for (int j = 0; j < ciphertextBlock.length; j++) {
+                plaintextStream.write(plaintextBlock[j]);
+            }
+
+            state = xorFullBlocks(state, plaintextBlock);
+            state = aes.encrypt(state);
+        }
+
+        byte[] lastCiphertextBlock = Arrays.copyOfRange(ciphertext, i, i + R);
+        int dif = ciphertext.length - i;
+        if (dif == R) {
+            plaintextBlock = Arrays.copyOfRange(xorFullBlocks(state, lastCiphertextBlock), 0, R);
+
+            for (int j = 0; j < plaintextBlock.length; j++) {
+                plaintextStream.write(plaintextBlock[j]);
+            }
+
+
+            byte[] temp = Arrays.copyOf(plaintextBlock, state.length);
+            temp[temp.length - 1] = 0x01;
+
+            state = xorFullBlocks(state, temp);
+        } else {
+            ciphertextBlock = Arrays.copyOfRange(ciphertext, i, i + dif);
+            plaintextBlock = Arrays.copyOf(xorFullBlocks(state, ciphertextBlock), dif);
+
+            for (int j = 0; j < dif; j++) {
+                plaintextStream.write(plaintextBlock[j]);
+            }
+
+            byte[] temp = Arrays.copyOf(plaintextBlock, state.length);
+            temp[plaintextBlock.length] = (byte) 0x80;
+            temp[temp.length-1] = 0x02;
+
+            state = xorFullBlocks(state, temp);
+        }
+
+        state = aes.encrypt(state);
+        byte[] tag = Arrays.copyOf(state, t);
+        System.out.println("TAG: " + Arrays.toString(tag));
+
+        return plaintextStream.toByteArray();
+    }
+
+    public byte[] createLastMessageBlock(byte[] messageData, int i, int r) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        for (int j = i; j < messageData.length; j++) {
+            stream.write(messageData[j]);
+        }
+        stream.write(0x80);
+        for (int j = stream.size(); j < r; j++) {
+            stream.write(0x00);
+        }
+        return stream.toByteArray();
     }
 }
