@@ -1,15 +1,12 @@
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import saeb.SAEB;
 import tiny.AES;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
 
 import static org.example.Main.hexStringToByteArray;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class SAEBTest {
 
@@ -21,20 +18,19 @@ public class SAEBTest {
     public static final String ASSOCIATED_SECOND_BLOCK = "1122334455667788";
     public static final String ASSOCIATED_THIRD_BLOCK = "0102800000000000";
 
-
-    public static final String PLAINTEXT_FULL_BLOCK = "010203040506070811223344010203040506";
     public static final String PLAINTEXT_FIRST_BLOCK = "010203040506";
     public static final String PLAINTEXT_SECOND_BLOCK = "070811223344";
     public static final String PLAINTEXT_THIRD_BLOCK = "010203040506";
 
-    public static final String CIPHERTEXT_FULL_BLOCK            = "c7a338338289b570eb0a002b856241cc6986";
-    public static final String CIPHERTEXT_NON_EVEN_FULL_BLOCK   = "c7a338338289b570eb0a002b856241cc6986835fe1";
 
     public static final String CIPHERTEXT_FIRST_BLOCK = "c7a338338289";
     public static final String CIPHERTEXT_SECOND_BLOCK = "b570eb0a002b";
     public static final String CIPHERTEXT_THIRD_BLOCK = "856241cc6986";
 
-    public static final String PLAINTEXT_NON_EVEN_FULL_BLOCK    = "010203040506070811223344010203040506ffffff";
+    public static final String PLAINTEXT_FULL_BLOCK  = "0123456789abcdef0123456789abcdef0123456789abcdef";
+    public static final String CIPHERTEXT_FULL_BLOCK = "c7827e500e248a11d4771c9477f78f8b60f8fa54b48494b1";
+    public static final String PLAINTEXT_NON_EVEN_FULL_BLOCK    = "0123456789abcdef0123456789abcdef0123456789abcdef0123";
+    public static final String CIPHERTEXT_NON_EVEN_FULL_BLOCK   = "c7827e500e248a11d4771c9477f78f8b60f8fa54b48494b111b3";
 
 
     public static final int R = 6;
@@ -51,7 +47,7 @@ public class SAEBTest {
     }
 
     @Test
-    public void coreEvenBlocksEncryptionTest() {
+    public void encryptEven() {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
         byte[] iv = new byte[16];
@@ -81,35 +77,39 @@ public class SAEBTest {
         stream.write(state, 0, 6);
 
 
-        assertEquals(TestUtils.bytesToHex(
-                        stream.toByteArray()
-                ),
-
+        assertEquals(CIPHERTEXT_FULL_BLOCK,
                 TestUtils.bytesToHex(
                         saeb.coreEncrypt(iv, TestUtils.hexStringToByteArray(PLAINTEXT_FULL_BLOCK))));
     }
 
     @Test
-    public void coreEvenBlocksDecryptionTest() {
-//        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//
-//
-//        byte[] state = aes.encrypt(iv);
-//        assertEquals("c6a13b37878f5b826f4f8162a1c8d879", TestUtils.bytesToHex(state));
-//
-//        byte[] plaintextBlock;
-//        byte[] ciphertextBlock = TestUtils.hexStringToByteArray(CIPHERTEXT_FIRST_BLOCK);
-
-//
-//        plaintextBlock = Arrays.copyOfRange(saeb.xorFullBlocks(state, ciphertextBlock), 0, R);
-//        assertEquals("010203040506", TestUtils.bytesToHex(plaintextBlock));
-
+    public void decryptEven() {
         byte[] iv = new byte[16];
         assertEquals("00000000000000000000000000000000", TestUtils.bytesToHex(iv));
 
         assertEquals(PLAINTEXT_FULL_BLOCK,
                 TestUtils.bytesToHex(
                         saeb.coreDecrypt(iv, TestUtils.hexStringToByteArray(CIPHERTEXT_FULL_BLOCK))));
+    }
+
+    @Test
+    public void encryptNonEven() {
+        byte[] iv = new byte[16];
+        assertEquals("00000000000000000000000000000000", TestUtils.bytesToHex(iv));
+
+        assertEquals(CIPHERTEXT_NON_EVEN_FULL_BLOCK,
+                TestUtils.bytesToHex(
+                        saeb.coreEncrypt(iv, TestUtils.hexStringToByteArray(PLAINTEXT_NON_EVEN_FULL_BLOCK))));
+    }
+
+    @Test
+    public void decryptNonEven() {
+        byte[] iv = new byte[16];
+        assertEquals("00000000000000000000000000000000", TestUtils.bytesToHex(iv));
+
+        assertEquals(PLAINTEXT_NON_EVEN_FULL_BLOCK,
+                TestUtils.bytesToHex(
+                        saeb.coreDecrypt(iv, TestUtils.hexStringToByteArray(CIPHERTEXT_NON_EVEN_FULL_BLOCK))));
     }
 
 
@@ -198,27 +198,6 @@ public class SAEBTest {
     public void hashNonEvenTest() {
         byte[] result = saeb.hash(hexStringToByteArray(ASSOCIATED_FULL_NONEVEN), hexStringToByteArray(TEST_NONCE_BYTES));
         assertEquals("8ad86ed98ca7b82e046b34e92fd4007a", TestUtils.bytesToHex(result));
-    }
-
-    @Test
-    public void CoreNonEvenEncryptionTest() {
-        byte[] iv = new byte[16];
-        assertEquals("00000000000000000000000000000000", TestUtils.bytesToHex(iv));
-
-        assertEquals(CIPHERTEXT_NON_EVEN_FULL_BLOCK,
-                TestUtils.bytesToHex(
-                        saeb.coreEncrypt(iv, TestUtils.hexStringToByteArray(PLAINTEXT_NON_EVEN_FULL_BLOCK))));
-    }
-
-    @Test
-    @Ignore("Not working")
-    public void CoreNonEvenDecryptionTest() {
-        byte[] iv = new byte[16];
-        assertEquals("00000000000000000000000000000000", TestUtils.bytesToHex(iv));
-
-        assertEquals(PLAINTEXT_NON_EVEN_FULL_BLOCK,
-                TestUtils.bytesToHex(
-                        saeb.coreEncrypt(iv, TestUtils.hexStringToByteArray(CIPHERTEXT_NON_EVEN_FULL_BLOCK))));
     }
 
 }
