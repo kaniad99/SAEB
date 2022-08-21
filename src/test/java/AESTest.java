@@ -1,7 +1,7 @@
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import tiny.AES;
+import ciphers.AES;
 
 public class AESTest {
     private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();

@@ -1,30 +1,23 @@
 package saeb;
 
-import tiny.AES;
+import ciphers.AES;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
-import static org.example.Main.hexStringToByteArray;
-
 public class SAEB {
-    public static final String KEY = "000102030405060708090a0b0c0d0e0f";
-
     //    Block cipher size (in bytes)
     public static final int N_BYTES = 16;
-    // Block Cipher size (in bits)
-    public static final int N_BITS = 128;
 
     // Associated data block size in bytes
     public static final int R1 = 8;
-    public static final int R2 = 4;
     public static final int R = 6;
     public static final int t = 5;
 
     private final AES aes;
 
-    public SAEB() {
-        aes = new AES(hexStringToByteArray(KEY));
+    public SAEB(byte[] key) {
+        aes = new AES(key);
     }
 
     public byte[] hash(byte[] associatedData, byte[] nonce) {
@@ -136,6 +129,7 @@ public class SAEB {
         return ciphertextStream.toByteArray();
     }
 
+
     public byte[] coreDecrypt(byte[] iv, byte[] ciphertext) {
         byte[] state = aes.encrypt(iv);
 
@@ -180,7 +174,7 @@ public class SAEB {
 
             byte[] temp = Arrays.copyOf(plaintextBlock, state.length);
             temp[dif] = (byte) 0x80;
-            temp[temp.length-1] = 0x02;
+            temp[temp.length - 1] = 0x02;
 
             state = xorFullBlocks(state, temp);
         }
@@ -190,17 +184,5 @@ public class SAEB {
         System.out.println("Decryption TAG: " + Arrays.toString(tag));
 
         return plaintextStream.toByteArray();
-    }
-
-    public byte[] createLastMessageBlock(byte[] messageData, int i, int r) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        for (int j = i; j < messageData.length; j++) {
-            stream.write(messageData[j]);
-        }
-        stream.write(0x80);
-        for (int j = stream.size(); j < r; j++) {
-            stream.write(0x00);
-        }
-        return stream.toByteArray();
     }
 }
