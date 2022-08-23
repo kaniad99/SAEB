@@ -1,36 +1,16 @@
 package org.example;
 
+import ciphers.AES;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import saeb.SAEB;
-import ciphers.AES;
-
-import java.util.Arrays;
 
 public class Main {
     private static AES cipher;
 
     public static void main(String[] args) {
         System.out.println("Hello world!");
-
-        byte[] key = "1234567890123456".getBytes();
-        byte[] message = "dupabladakilbasa".getBytes();
-        byte[] iv = "0000000000100000".getBytes();
-
-        SAEB saeb = new SAEB(key);
-
-        byte[] ciphertext = saeb.coreEncrypt(iv, message);
-
-        ciphertext = saeb.coreDecrypt(iv, ciphertext);
-
-        if(Arrays.equals(message, ciphertext)){
-            System.out.println("YES");
-        } else {
-            System.out.println("NO: " + new String(ciphertext));
-            System.out.println("NO: " + new String(message));
-        }
     }
 
     private static void copiedMain(String[] args) {
@@ -51,18 +31,18 @@ public class Main {
         cipher = new AES(key);
 
         double startTime = System.currentTimeMillis();
-        for (int i=0; i < 100000; i++) cipher.ECB_decrypt(cipher.ECB_encrypt(inputText));
+        for (int i = 0; i < 100000; i++) cipher.ECB_decrypt(cipher.ECB_encrypt(inputText));
         double endTime = System.currentTimeMillis();
-        System.out.println("ECB | "+(endTime-startTime)/1000.0 + " secs");
+        System.out.println("ECB | " + (endTime - startTime) / 1000.0 + " secs");
 
         // CBC test
         byte[] iv = "c8IKDNGsbioSCfxWa6KT8A84SrlMwOUH".getBytes();
         cipher = new AES(key, iv);
 
         double startTimeCBC = System.currentTimeMillis();
-        for (int i=0; i < 100000; i++) cipher.CBC_decrypt(cipher.CBC_encrypt(inputText));
+        for (int i = 0; i < 100000; i++) cipher.CBC_decrypt(cipher.CBC_encrypt(inputText));
         double endTimeCBC = System.currentTimeMillis();
-        System.out.println("CBC | "+(endTimeCBC-startTimeCBC)/1000.0 + " secs");
+        System.out.println("CBC | " + (endTimeCBC - startTimeCBC) / 1000.0 + " secs");
     }
 
     private static void myTest() {
@@ -92,20 +72,20 @@ public class Main {
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
             data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                    + Character.digit(s.charAt(i+1), 16));
+                    + Character.digit(s.charAt(i + 1), 16));
         }
         return data;
     }
 
     private static String fillBlock(String text) {
-        int spaceNum = text.getBytes().length%16==0?0:16-text.getBytes().length%16;
-        for (int i = 0; i<spaceNum; i++) text += " ";
+        int spaceNum = text.getBytes().length % 16 == 0 ? 0 : 16 - text.getBytes().length % 16;
+        for (int i = 0; i < spaceNum; i++) text += " ";
         return text;
     }
 
     private static byte[] getKey() {
         String key = "";
-        for (int i=0; i < 2; i++) key += Long.toHexString(Double.doubleToLongBits(Math.random()));
+        for (int i = 0; i < 2; i++) key += Long.toHexString(Double.doubleToLongBits(Math.random()));
         return key.getBytes();
     }
 

@@ -7,34 +7,38 @@ import java.util.Arrays;
 
 public class SAEB {
     //    Block cipher size (in bytes)
-    public static final int N_BYTES = 16;
+    private int n;
 
     // Associated data block size in bytes
-    public static final int R1 = 8;
-    public static final int R = 6;
-    public static final int t = 5;
+    private int r1;
+    private int r;
+    private int t;
 
     private final AES aes;
 
-    public SAEB(byte[] key) {
-        aes = new AES(key);
+    public SAEB(int n, int r1, int r, int t, AES aes) {
+        this.n = n;
+        this.r1 = r1;
+        this.r = r;
+        this.t = t;
+        this.aes = aes;
     }
 
     public byte[] hash(byte[] associatedData, byte[] nonce) {
-        byte[] state = new byte[N_BYTES];
+        byte[] state = new byte[n];
 
         int i;
-        for (i = 0; i + R1 < associatedData.length; i = i + R1) {
+        for (i = 0; i + r1 < associatedData.length; i = i + r1) {
             state = hashRound(state,
-                    Arrays.copyOfRange(associatedData, i, i + R1));
+                    Arrays.copyOfRange(associatedData, i, i + r1));
         }
 
         int dif = associatedData.length - i;
 
-        if (dif == R1) {
+        if (dif == r1) {
             state[state.length - 1] ^= 0x01;
             state = hashRound(state,
-                    Arrays.copyOfRange(associatedData, i, i + R1));
+                    Arrays.copyOfRange(associatedData, i, i + r1));
         } else {
             byte[] lastBlock = createLastHashBlock(associatedData, i);
 
@@ -51,7 +55,7 @@ public class SAEB {
             stream.write(associatedData[j]);
         }
         stream.write(0x80);
-        for (int j = stream.size(); j < R1; j++) {
+        for (int j = stream.size(); j < r1; j++) {
             stream.write(0x00);
         }
         return stream.toByteArray();
@@ -82,15 +86,30 @@ public class SAEB {
         return temp;
     }
 
-    public byte[] coreEncrypt(byte[] iv, byte[] plaintext) {
+    public SAEBResult encrypt(byte[] nonce, byte[] associatedData, byte[] plaintext){
+        byte[] iv = hash(associatedData, nonce);
+        return coreEncrypt(iv, plaintext);
+    }
+
+    public byte[] decrypt(byte[] nonce, byte[] associatedData, byte[] ciphertext, byte[] sentTag) {
+        byte[] iv = hash(associatedData, nonce);
+        SAEBResult decResult = coreDecrypt(iv, ciphertext);
+        if(Arrays.equals(decResult.getTag(), sentTag)){
+            return decResult.getResult();
+        } else {
+            return new byte[0];
+        }
+    }
+
+    public SAEBResult coreEncrypt(byte[] iv, byte[] plaintext) {
         byte[] state = aes.encrypt(iv);
         ByteArrayOutputStream ciphertextStream = new ByteArrayOutputStream();
 
         byte[] messageBlock;
 
         int i;
-        for (i = 0; i + R < plaintext.length; i = i + R) {
-            messageBlock = Arrays.copyOfRange(plaintext, i, i + R);
+        for (i = 0; i + r < plaintext.length; i = i + r) {
+            messageBlock = Arrays.copyOfRange(plaintext, i, i + r);
 
             state = xorFullBlocks(state, messageBlock);
 
@@ -103,12 +122,12 @@ public class SAEB {
         byte[] lastPlaintextBlock = Arrays.copyOfRange(plaintext, i, i + state.length);
 
         int dif = plaintext.length - i;
-        if (dif == R) {
+        if (dif == r) {
             state[state.length - 1] ^= 0x01;
 
             state = xorFullBlocks(state, lastPlaintextBlock);
 
-            for (int j = 0; j < R; j++) {
+            for (int j = 0; j < r; j++) {
                 ciphertextStream.write(state[j]);
             }
         } else {
@@ -124,13 +143,11 @@ public class SAEB {
 
         state = aes.encrypt(state);
         byte[] tag = Arrays.copyOf(state, t);
-        System.out.println("Encryption TAG: " + Arrays.toString(tag));
 
-        return ciphertextStream.toByteArray();
+        return new SAEBResult(ciphertextStream.toByteArray(), tag);
     }
 
-
-    public byte[] coreDecrypt(byte[] iv, byte[] ciphertext) {
+    public SAEBResult coreDecrypt(byte[] iv, byte[] ciphertext) {
         byte[] state = aes.encrypt(iv);
 
         ByteArrayOutputStream plaintextStream = new ByteArrayOutputStream();
@@ -139,9 +156,9 @@ public class SAEB {
         byte[] plaintextBlock;
 
         int i;
-        for (i = 0; i + R < ciphertext.length; i = i + R) {
-            ciphertextBlock = Arrays.copyOfRange(ciphertext, i, i + R);
-            plaintextBlock = Arrays.copyOfRange(xorFullBlocks(state, ciphertextBlock), 0, R);
+        for (i = 0; i + r < ciphertext.length; i = i + r) {
+            ciphertextBlock = Arrays.copyOfRange(ciphertext, i, i + r);
+            plaintextBlock = Arrays.copyOfRange(xorFullBlocks(state, ciphertextBlock), 0, r);
 
             for (int j = 0; j < ciphertextBlock.length; j++) {
                 plaintextStream.write(plaintextBlock[j]);
@@ -153,8 +170,8 @@ public class SAEB {
 
         byte[] lastCiphertextBlock = Arrays.copyOfRange(ciphertext, i, i + state.length);
         int dif = ciphertext.length - i;
-        if (dif == R) {
-            plaintextBlock = Arrays.copyOfRange(xorFullBlocks(state, lastCiphertextBlock), 0, R);
+        if (dif == r) {
+            plaintextBlock = Arrays.copyOfRange(xorFullBlocks(state, lastCiphertextBlock), 0, r);
 
             for (byte b : plaintextBlock) {
                 plaintextStream.write(b);
@@ -181,8 +198,7 @@ public class SAEB {
 
         state = aes.encrypt(state);
         byte[] tag = Arrays.copyOf(state, t);
-        System.out.println("Decryption TAG: " + Arrays.toString(tag));
 
-        return plaintextStream.toByteArray();
+        return new SAEBResult(plaintextStream.toByteArray(),tag);
     }
 }
