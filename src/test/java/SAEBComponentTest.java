@@ -23,11 +23,6 @@ public class SAEBComponentTest {
     public static final String PLAINTEXT_SECOND_BLOCK = "070811223344";
     public static final String PLAINTEXT_THIRD_BLOCK = "010203040506";
 
-
-    public static final String CIPHERTEXT_FIRST_BLOCK = "c7a338338289";
-    public static final String CIPHERTEXT_SECOND_BLOCK = "b570eb0a002b";
-    public static final String CIPHERTEXT_THIRD_BLOCK = "856241cc6986";
-
     public static final String PLAINTEXT_FULL_BLOCK = "0123456789abcdef0123456789abcdef0123456789abcdef";
     public static final String CIPHERTEXT_FULL_BLOCK = "c7827e500e248a11d4771c9477f78f8b60f8fa54b48494b1";
     public static final String PLAINTEXT_NON_EVEN_FULL_BLOCK = "0123456789abcdef0123456789abcdef0123456789abcdef0123";
@@ -63,21 +58,21 @@ public class SAEBComponentTest {
         assertEquals("c6a13b37878f5b826f4f8162a1c8d879", TestUtils.bytesToHex(state));
 
         byte[] plaintextBlock = TestUtils.hexStringToByteArray(PLAINTEXT_FIRST_BLOCK);
-        state = saeb.xorFullBlocks(state, plaintextBlock);
+        state = saeb.xorBlocks(state, plaintextBlock);
         assertEquals("c7a3383382895b826f4f8162a1c8d879", TestUtils.bytesToHex(state));
         stream.write(state, 0, 6);
         state = aes.encrypt(state);
         assertEquals("b278fa28336f49bf95d326b642d874c8", TestUtils.bytesToHex(state));
 
         plaintextBlock = TestUtils.hexStringToByteArray(PLAINTEXT_SECOND_BLOCK);
-        state = saeb.xorFullBlocks(state, plaintextBlock);
+        state = saeb.xorBlocks(state, plaintextBlock);
         assertEquals("b570eb0a002b49bf95d326b642d874c8", TestUtils.bytesToHex(state));
         stream.write(state, 0, 6);
         state = aes.encrypt(state);
         assertEquals("846042c86c8007a857cd1a1827af0586", TestUtils.bytesToHex(state));
 
         plaintextBlock = TestUtils.hexStringToByteArray(PLAINTEXT_THIRD_BLOCK);
-        state = saeb.xorFullBlocks(state, plaintextBlock);
+        state = saeb.xorBlocks(state, plaintextBlock);
         state[state.length - 1] ^= 0x01;
         assertEquals("856241cc698607a857cd1a1827af0587", TestUtils.bytesToHex(state));
 
@@ -131,7 +126,7 @@ public class SAEBComponentTest {
         byte[] associated = hexStringToByteArray(ASSOCIATED_FIRST_BLOCK);
         assertEquals("0102030405060708", TestUtils.bytesToHex(associated));
 
-        hashState = saeb.xorFullBlocks(hashState, associated);
+        hashState = saeb.xorBlocks(hashState, associated);
         assertEquals("01020304050607080000000000000000", TestUtils.bytesToHex(hashState));
 
         hashState = aes.encrypt(hashState);
@@ -140,7 +135,7 @@ public class SAEBComponentTest {
         associated = hexStringToByteArray(ASSOCIATED_SECOND_BLOCK);
         assertEquals("1122334455667788", TestUtils.bytesToHex(associated));
 
-        hashState = saeb.xorFullBlocks(hashState, associated);
+        hashState = saeb.xorBlocks(hashState, associated);
         assertEquals("09985aff1307896da7cc9ec1a731e278", TestUtils.bytesToHex(hashState));
 
         hashState[hashState.length - 1] ^= 0x01;
@@ -168,7 +163,7 @@ public class SAEBComponentTest {
         byte[] associated = hexStringToByteArray(ASSOCIATED_FIRST_BLOCK);
         assertEquals("0102030405060708", TestUtils.bytesToHex(associated));
 
-        hashState = saeb.xorFullBlocks(hashState, associated);
+        hashState = saeb.xorBlocks(hashState, associated);
         assertEquals("01020304050607080000000000000000", TestUtils.bytesToHex(hashState));
 
         hashState = aes.encrypt(hashState);
@@ -179,7 +174,7 @@ public class SAEBComponentTest {
         associated = hexStringToByteArray(ASSOCIATED_SECOND_BLOCK);
         assertEquals("1122334455667788", TestUtils.bytesToHex(associated));
 
-        hashState = saeb.xorFullBlocks(hashState, associated);
+        hashState = saeb.xorBlocks(hashState, associated);
         assertEquals("09985aff1307896da7cc9ec1a731e278", TestUtils.bytesToHex(hashState));
 
         hashState = aes.encrypt(hashState);
@@ -193,7 +188,7 @@ public class SAEBComponentTest {
         associated = hexStringToByteArray(ASSOCIATED_THIRD_BLOCK);
         assertEquals("0102800000000000", TestUtils.bytesToHex(associated));
 
-        hashState = saeb.xorFullBlocks(hashState, associated);
+        hashState = saeb.xorBlocks(hashState, associated);
         assertEquals("a43784caba30cfccf77ecfaf3b9d7fc5", TestUtils.bytesToHex(hashState));
 
         hashState = aes.encrypt(hashState);
