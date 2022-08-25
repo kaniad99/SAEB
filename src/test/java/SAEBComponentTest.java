@@ -60,14 +60,14 @@ public class SAEBComponentTest {
         byte[] plaintextBlock = TestUtils.hexStringToByteArray(PLAINTEXT_FIRST_BLOCK);
         state = saeb.xorBlocks(state, plaintextBlock);
         assertEquals("c7a3383382895b826f4f8162a1c8d879", TestUtils.bytesToHex(state));
-        stream.write(state, 0, 6);
+        stream.write(state, 0, R);
         state = aes.encrypt(state);
         assertEquals("b278fa28336f49bf95d326b642d874c8", TestUtils.bytesToHex(state));
 
         plaintextBlock = TestUtils.hexStringToByteArray(PLAINTEXT_SECOND_BLOCK);
         state = saeb.xorBlocks(state, plaintextBlock);
         assertEquals("b570eb0a002b49bf95d326b642d874c8", TestUtils.bytesToHex(state));
-        stream.write(state, 0, 6);
+        stream.write(state, 0, R);
         state = aes.encrypt(state);
         assertEquals("846042c86c8007a857cd1a1827af0586", TestUtils.bytesToHex(state));
 
