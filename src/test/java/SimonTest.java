@@ -4,6 +4,8 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
+import static org.junit.Assert.assertArrayEquals;
+
 public class SimonTest {
 
 //    Simon32/64
@@ -93,7 +95,7 @@ public class SimonTest {
         System.out.println(TestUtils.bytesToHex(io64));
         System.out.println();
 
-        Assert.assertArrayEquals(plaintext1, plaintext2);
+        assertArrayEquals(plaintext1, plaintext2);
     }
 
     @Test
@@ -103,7 +105,9 @@ public class SimonTest {
         //    Plaintext: 74206e69206d6f6f 6d69732061207369
         //    Ciphertext: 8d2b5579afc8a3a0 3bf72a87efe7b868
 
-        byte[] state = TestUtils.hexStringToByteArray("74206e69206d6f6f6d69732061207369");
+        byte[] plaintext = TestUtils.hexStringToByteArray("74206e69206d6f6f6d69732061207369");
+        byte[] plaintextBase = TestUtils.hexStringToByteArray("74206e69206d6f6f6d69732061207369");
+        byte[] ciphertext = TestUtils.hexStringToByteArray("8d2b5579afc8a3a03bf72a87efe7b868");
         byte[] key = TestUtils.hexStringToByteArray("1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100");
 
         System.out.println("SIMON 64/128");
@@ -112,23 +116,25 @@ public class SimonTest {
         System.out.println();
 
         System.out.print("Plaintext (original): ");
-        System.out.println(TestUtils.bytesToHex(state));
+        System.out.println(TestUtils.bytesToHex(plaintext));
         System.out.println();
 
-        byte[] plaintext1 = Arrays.copyOf(state, state.length);
+        SimonEngine simon = new SimonEngine(128, key);
 
-        byte[] ciphertext = SimonEngine.encrypt1(128, key, state);
+        byte[] ciphertext2 = simon.encrypt(plaintext);
+
+        assertArrayEquals(ciphertext, ciphertext2);
 
         System.out.print("Ciphertext: ");
         System.out.println(TestUtils.bytesToHex(ciphertext));
         System.out.println();
 
-        byte[] plaintext2 = SimonEngine.decrypt1(128, key, ciphertext);
+        byte[] plaintext2 = simon.decrypt(ciphertext);
 
         System.out.print("Plaintext (decryption): ");
-        System.out.println(TestUtils.bytesToHex(state));
+        System.out.println(TestUtils.bytesToHex(plaintext2));
         System.out.println();
 
-        Assert.assertArrayEquals(plaintext1, plaintext2);
+        assertArrayEquals(plaintextBase, plaintext2);
     }
 }
