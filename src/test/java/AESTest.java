@@ -28,6 +28,25 @@ public class AESTest {
     }
 
     @Test
+    public void AES128EmptyEncryptionTest(){
+        final String PLAINTEXT = "00000000000000000000000000000000";
+        final String KEY = "00000000000000000000000000000000";
+        final String EXPECTED_CIPHERTEXT = "66e94bd4ef8a2c3b884cfa59ca342b2e";
+
+        // Aes-128 test
+        byte[] plaintext = hexStringToByteArray(PLAINTEXT);
+        byte[] key = hexStringToByteArray(KEY);
+
+        AES szyfr = new AES(key);
+        byte[] ciphertext = szyfr.encrypt(plaintext);
+
+        byte[] actualPlaintext = szyfr.decrypt(ciphertext);
+
+        assertEquals(EXPECTED_CIPHERTEXT, bytesToHex(ciphertext));
+        assertEquals(PLAINTEXT, bytesToHex(actualPlaintext));
+    }
+
+    @Test
     public void AES192RoundTest(){
         final String EXPECTED_CIPHERTEXT = "dda97ca4864cdfe06eaf70a0ec0d7191";
 
