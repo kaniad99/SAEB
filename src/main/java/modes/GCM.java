@@ -1,9 +1,11 @@
 package modes;
 
-import Utils.GF2_128;
 import ciphers.Cipher;
+import utils.GF2_128;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 public class GCM {
@@ -46,6 +48,8 @@ public class GCM {
 
         ghashInit(x, h, associatedData);
 
+        System.out.println("h: " + bytesToHex(h.toByteArray()));
+
         byte[] y0;
         byte[] plaintextBlock;
         ByteArrayOutputStream ciphertextStream = new ByteArrayOutputStream();
@@ -57,20 +61,35 @@ public class GCM {
             y0 = ghashForIV(h, iv);
         }
 
+        System.out.println("y0: " + bytesToHex(y0));
+
         byte[] y = Arrays.copyOf(y0, y0.length);
+
+        System.out.println("y: " + bytesToHex(y));
+
+        System.out.println("E(K,Yo): " + bytesToHex(cipher.encrypt(y0)));
+
+        byte[] temp;
 
         int i;
         for (i = 0; i + n < plaintext.length; i = i + n) {
-            plaintextBlock = Arrays.copyOfRange(plaintext, i, i + n);
-            ciphertextStream.writeBytes(xorBlocks(plaintextBlock, cipher.encrypt(y)));
             incr(y);
+            System.out.println("y: " + bytesToHex(y));
+            plaintextBlock = Arrays.copyOfRange(plaintext, i, i + n);
+            temp = xorBlocks(plaintextBlock, cipher.encrypt(y));
+            System.out.println("E(K,Y): " + bytesToHex(temp));
+            ciphertextStream.writeBytes(temp);
+
         }
 
         int dif = plaintext.length - i;
         if (dif == n) {
             incr(y);
+            System.out.println("y: " + bytesToHex(y));
             plaintextBlock = Arrays.copyOfRange(plaintext, i, i + n);
-            ciphertextStream.writeBytes(xorBlocks(plaintextBlock, cipher.encrypt(y)));
+            temp = xorBlocks(plaintextBlock, cipher.encrypt(y));
+            System.out.println("E(K,Y): " + bytesToHex(temp));
+            ciphertextStream.writeBytes(temp);
 
         } else {
             plaintextBlock = Arrays.copyOfRange(plaintext, i, i + dif);
@@ -78,17 +97,95 @@ public class GCM {
             ciphertextStream.writeBytes(xorBlocks(plaintextBlock, cipher.encrypt(y)));
             incr(y);
         }
-        System.out.println(bytesToHex(y0));
-        System.out.println(bytesToHex(cipher.encrypt(y0)));
-        System.out.println(bytesToHex(ciphertextStream.toByteArray()));
+
+        byte[] ghash = ghash(h, associatedData, ciphertextStream.toByteArray());
+
+        System.out.println("GHASH(): " + bytesToHex(ghash));
 
         byte[] state = xorBlocks(ghash(h, associatedData, ciphertextStream.toByteArray()), cipher.encrypt(y0));
         byte[] tag = Arrays.copyOf(state, t);
         return new GCMResult(ciphertextStream.toByteArray(), tag);
     }
 
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i + 1), 16));
+        }
+        return data;
+    }
+    private byte[] ghash(GF2_128 h, byte[] ciphertext) {
+        GF2_128 x = new GF2_128();
+
+        int i;
+        for (i = 0; i + 16 < ciphertext.length; i += 16) {
+            GF2_128.add(x, x, new GF2_128(Arrays.copyOfRange(ciphertext, i, i + 16)));
+            GF2_128.mul(x, x, h);
+
+            System.out.println("x: " + bytesToHex(x.toByteArray()));
+        }
+        System.out.println("Ciphertext: " + bytesToHex(ciphertext));
+
+        GF2_128.add(x, x, new GF2_128(Arrays.copyOfRange(ciphertext, i, i + 16)));
+        GF2_128.mul(x, x, h);
+
+        System.out.println("x: " + bytesToHex(x.toByteArray()));
+
+        byte[] lengths = getLengths(0, ciphertext.length);
+        GF2_128 length = new GF2_128(lengths);
+
+        System.out.println("Len(A)||len(C): " + bytesToHex(length.toByteArray()));
+        GF2_128.add(x, x, length);
+        GF2_128.mul(x, x, h);
+
+        System.out.println("x: " + bytesToHex(x.toByteArray()));
+        return x.toByteArray();
+    }
+
     private byte[] ghash(GF2_128 h, byte[] associatedData, byte[] ciphertext) {
-        return new byte[16];
+        GF2_128 x = new GF2_128();
+
+        int i;
+        for (i = 0; i + 16 < ciphertext.length; i += 16) {
+            GF2_128.add(x, x, new GF2_128(Arrays.copyOfRange(ciphertext, i, i + 16)));
+            GF2_128.mul(x, x, h);
+
+            System.out.println("x: " + bytesToHex(x.toByteArray()));
+        }
+        System.out.println("Ciphertext: " + bytesToHex(ciphertext));
+
+        GF2_128.add(x, x, new GF2_128(Arrays.copyOfRange(ciphertext, i, i + 16)));
+        GF2_128.mul(x, x, h);
+
+        System.out.println("x: " + bytesToHex(x.toByteArray()));
+
+        GF2_128 length = new GF2_128(getLengths(associatedData.length, ciphertext.length));
+
+        System.out.println("Len(A)||len(C): " + bytesToHex(length.toByteArray()));
+        GF2_128.add(x, x, length);
+        GF2_128.mul(x, x, h);
+
+        System.out.println("x: " + bytesToHex(x.toByteArray()));
+        return x.toByteArray();
+    }
+
+    private byte[] getLengths(int associatedDataLength, int ciphertextlength) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try {
+            stream.write(longToBytes(associatedDataLength * 8L));
+            stream.write(longToBytes(ciphertextlength * 8L));
+            return stream.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public byte[] longToBytes(long x) {
+        ByteBuffer buffer = ByteBuffer.allocate(8);
+        buffer.putLong(x);
+        return buffer.array();
     }
 
     private byte[] ghashForIV(GF2_128 h, byte[] iv) {

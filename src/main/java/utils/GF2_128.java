@@ -26,30 +26,29 @@
 
  For more information, please refer to <http://unlicense.org>
  */
-package Utils;
+package utils;
 
 public class GF2_128 {
-    private final long [] word = new long[2];
+    private final long[] word = new long[2];
 
     /**
-     *
      * @param that the field element with which to compare
      * @return true if and only if this and that represent the same field element
      */
     public boolean equals(GF2_128 that) {
-        return this.word[0]==that.word[0] && this.word[1]==that.word[1];
+        return this.word[0] == that.word[0] && this.word[1] == that.word[1];
     }
 
     // using irreducible polynomial x^128+x^7+x^2+x+1
     // We need only the last word
-    static private final long irredPentanomial = (1L<<7) | (1L<<2) | (1L<<1) | 1L;
+    static private final long irredPentanomial = (1L << 7) | (1L << 2) | (1L << 1) | 1L;
 
     // irredPentanomial times 0, 1, x, x+1, x^2, x^2+1, x^2+x, x^2+x+1, x^3, x^3+1, x^3+x, x^3+x+1, x^3+x^2, x^3+x^2+1, x^3+x^2+x, x^3+x^2x+1,
     // Need only the last word, because the first word is 0
-    static private final long [] irredMuls = {0L, irredPentanomial, irredPentanomial<<1, (irredPentanomial<<1)^irredPentanomial,
-            irredPentanomial<<2, (irredPentanomial<<2)^irredPentanomial, (irredPentanomial<<2)^(irredPentanomial<<1), (irredPentanomial<<2)^(irredPentanomial<<1)^irredPentanomial,
-            irredPentanomial<<3, (irredPentanomial<<3)^irredPentanomial, (irredPentanomial<<3)^(irredPentanomial<<1), (irredPentanomial<<3)^(irredPentanomial<<1)^irredPentanomial,
-            (irredPentanomial<<3)^(irredPentanomial<<2), (irredPentanomial<<3)^(irredPentanomial<<2)^irredPentanomial, (irredPentanomial<<3)^(irredPentanomial<<2)^(irredPentanomial<<1), (irredPentanomial<<3)^(irredPentanomial<<2)^(irredPentanomial<<1)^irredPentanomial
+    static private final long[] irredMuls = {0L, irredPentanomial, irredPentanomial << 1, (irredPentanomial << 1) ^ irredPentanomial,
+            irredPentanomial << 2, (irredPentanomial << 2) ^ irredPentanomial, (irredPentanomial << 2) ^ (irredPentanomial << 1), (irredPentanomial << 2) ^ (irredPentanomial << 1) ^ irredPentanomial,
+            irredPentanomial << 3, (irredPentanomial << 3) ^ irredPentanomial, (irredPentanomial << 3) ^ (irredPentanomial << 1), (irredPentanomial << 3) ^ (irredPentanomial << 1) ^ irredPentanomial,
+            (irredPentanomial << 3) ^ (irredPentanomial << 2), (irredPentanomial << 3) ^ (irredPentanomial << 2) ^ irredPentanomial, (irredPentanomial << 3) ^ (irredPentanomial << 2) ^ (irredPentanomial << 1), (irredPentanomial << 3) ^ (irredPentanomial << 2) ^ (irredPentanomial << 1) ^ irredPentanomial
 
     };
 
@@ -61,6 +60,7 @@ public class GF2_128 {
 
     /**
      * returns a copy of the field element
+     *
      * @param that element to copy
      */
     public GF2_128(GF2_128 that) {
@@ -70,6 +70,7 @@ public class GF2_128 {
 
     /**
      * returns the field element whose 32 least significant bits are bits of that and rest are 0
+     *
      * @param that lower 32 bits
      */
     public GF2_128(int that) {
@@ -78,9 +79,10 @@ public class GF2_128 {
 
     /**
      * returns the field element whose bits are given by the long array
+     *
      * @param that must be length 2
      */
-    public GF2_128(long [] that) {
+    public GF2_128(long[] that) {
         assert (that.length == 2);
         this.word[0] = that[0];
         this.word[1] = that[1];
@@ -88,32 +90,33 @@ public class GF2_128 {
 
     /**
      * returns the field element whose bits are given by the byte array that
+     *
      * @param that must be length 16
      */
-    public GF2_128(byte [] that) {
+    public GF2_128(byte[] that) {
         this(that, 0);
     }
 
     /**
      * returns the field element whose bits are given by the byte array that[pos]...that[pos+15]
+     *
      * @param that must be length at least pos+16
      */
-    public GF2_128(byte [] that, int pos) {
-        assert (that.length >= pos+16);
-        for (int i = 0; i<8; i++) {
-            word[0] |= (((long)that[i+pos] & 0xFF))<<(i<<3);
+    public GF2_128(byte[] that, int pos) {
+        assert (that.length >= pos + 16);
+        for (int i = 0; i < 8; i++) {
+            word[0] |= (((long) that[i + pos] & 0xFF)) << (i << 3);
         }
-        for (int i = 0; i<8; i++) {
-            word[1] |= (((long)that[i+pos+8] & 0xFF))<<(i<<3);
+        for (int i = 0; i < 8; i++) {
+            word[1] |= (((long) that[i + pos + 8] & 0xFF)) << (i << 3);
         }
     }
 
     /**
-     *
      * @return byte array of length 16 containing the two words of the field element
      */
     public byte[] toByteArray() {
-        byte [] ret = new byte[16];
+        byte[] ret = new byte[16];
         toByteArray(ret, 0);
         return ret;
     }
@@ -122,21 +125,20 @@ public class GF2_128 {
      * @param ret bytes of the field element will go into ret[pos]...ret[pos+15]
      */
     public void toByteArray(byte[] ret, int pos) {
-        assert(ret.length>=pos+16);
-        for (int j = 0; j<2; j++) {
+        assert (ret.length >= pos + 16);
+        for (int j = 0; j < 2; j++) {
             for (int i = 0; i < 8; i++) {
-                ret[pos+i+8*j] = (byte) ((word[j] >> (i << 3)) & 0xFF);
+                ret[pos + i + 8 * j] = (byte) ((word[j] >> (i << 3)) & 0xFF);
             }
         }
     }
 
 
     /**
-     *
      * @return long array of length 2 containing the two words of the field element
      */
-    public long [] toLongArray() {
-        long [] ret = new long[2];
+    public long[] toLongArray() {
+        long[] ret = new long[2];
         ret[0] = word[0];
         ret[1] = word[1];
         return ret;
@@ -144,31 +146,30 @@ public class GF2_128 {
 
 
     /**
-     *
      * @return true if this == 0, false otherwise
      */
-    public boolean isZero () {
-        return word[0]==0L && word[1]==0L;
+    public boolean isZero() {
+        return word[0] == 0L && word[1] == 0L;
     }
 
     /**
-     *
      * @return true if this == 1, false otherwise
      */
-    public boolean isOne () {
-        return word[0]==1L && word[1]==0L;
+    public boolean isOne() {
+        return word[0] == 1L && word[1] == 0L;
     }
 
     /**
      * Computes a plus b and puts the result into res.
+     *
      * @param res output; must be not null; may be equal to a and/or b
-     * @param a multiplicand; may be equal to res, in which case will get overwritten
-     * @param b multiplier; may be equal to res, in which case will get overwritten
+     * @param a   multiplicand; may be equal to res, in which case will get overwritten
+     * @param b   multiplier; may be equal to res, in which case will get overwritten
      */
 
-    public static void add (GF2_128 res, GF2_128 a, GF2_128 b) {
-        res.word[0] = a.word[0]^b.word[0];
-        res.word[1] = a.word[1]^b.word[1];
+    public static void add(GF2_128 res, GF2_128 a, GF2_128 b) {
+        res.word[0] = a.word[0] ^ b.word[0];
+        res.word[1] = a.word[1] ^ b.word[1];
     }
 
 
@@ -190,181 +191,184 @@ public class GF2_128 {
 //     * @param a multiplicand; may be equal to res, in which case will get overwritten
 //     * @param b multiplier; may be equal to res, in which case will get overwritten
 //     */
-//    public static void mul (GF2_128 res, GF2_128 a, GF2_128 b) {
-//
-//        // Implements a sort of times-x-and-add algorithm, except instead of multiplying by x
-//        // we multiply by x^4 and then add one of possible 16 precomputed values
-//
-//        // contains a*0, a*1, a*x, a*(x+1), a*x^2, a*(x^2+1), a*(x^2+x), a*(x^2+x+1)
-//        // a*x^3, a*(x^3+1), a*(x^3+x), a*(x^3+x+1), a*(x^3+x^2), a*(x^3+x^2+1), a*(x^3+x^2+x), a*(x^3+x^2+x+1), all mod reduced
-//        // First word of each is in a0 muls, second word of each is in a1muls
-//        long []     a0muls = new long[16];
-//        long [] a1muls = new long[16];
-//
-//        // a0muls[0] and a1muls[0] are already correctly initialized to 0
-//
-//
-//        a0muls[1] = a.word[0];
-//        a1muls[1] = a.word[1];
-//
-//        // a*x, a*x^2, a*x^3
-//        for (int i = 2; i<=8; i*=2) {
-//            // multiply a*x^{log_2 i/2} by x to get a*x^{log_2 i}
-//            int prev = i / 2;
-//            a0muls[i] = a0muls[prev] << 1;
-//            a1muls[i] = (a1muls[prev] << 1) | (a0muls[prev] >>> 63);
-//            // mod reduce
-//            a0muls[i] ^= irredMuls[(int) (a1muls[prev] >>> 63)];
-//        }
-//
-//        // a*(x+1)
-//        a0muls[3] = a0muls[1] ^ a0muls[2];
-//        a1muls[3] = a1muls[1] ^ a1muls[2];
-//
-//        // a*(x^2+1), a*(x^2+x), a*(x^2+x+1)
-//        for (int i = 1; i<4; i++) {
-//            a0muls[4|i] = a0muls[4]^a0muls[i];
-//            a1muls[4|i] = a1muls[4]^a1muls[i];
-//        }
-//
-//        // a*(x^3+1), a*(x^3+x), a*(x^3+x+1), a*(x^3+x^2), a*(x^3+x^2+1), a*(x^3+x^2+x), a*(x^3+x^2+x+1)
-//        for (int i = 1; i<8; i++) {
-//            a0muls[8|i] = a0muls[8]^a0muls[i];
-//            a1muls[8|i] = a1muls[8]^a1muls[i];
-//        }
-//
-//        long w0 = 0, w1=0;
-//        for (int j = 1; j>=0; j--) {
-//            long multiplier = b.word[j];
-//            for (int i = 60; i >= 0; i -= 4) {
-//                // Multiply by x^4
-//                int modReduceIndex = (int) (w1 >>> 60);
-//                w1 = (w1 << 4) | (w0 >>> 60);
-//                // MOD REDUCE ACCORDING TO modReduceIndex by XORing the right value
-//                w0 = (w0 << 4) ^ irredMuls[modReduceIndex];
-//
-//                // Add the correct multiple of a
-//                int index = (int) ((multiplier >>> i) & 15);
-//                w0 ^= a0muls[index];
-//                w1 ^= a1muls[index];
-//            }
-//        }
-//        res.word[0] = w0;
-//        res.word[1] = w1;
-//    }
+    public static void mul (GF2_128 res, GF2_128 a, GF2_128 b) {
+
+        // Implements a sort of times-x-and-add algorithm, except instead of multiplying by x
+        // we multiply by x^4 and then add one of possible 16 precomputed values
+
+        // contains a*0, a*1, a*x, a*(x+1), a*x^2, a*(x^2+1), a*(x^2+x), a*(x^2+x+1)
+        // a*x^3, a*(x^3+1), a*(x^3+x), a*(x^3+x+1), a*(x^3+x^2), a*(x^3+x^2+1), a*(x^3+x^2+x), a*(x^3+x^2+x+1), all mod reduced
+        // First word of each is in a0 muls, second word of each is in a1muls
+        long []     a0muls = new long[16];
+        long [] a1muls = new long[16];
+
+        // a0muls[0] and a1muls[0] are already correctly initialized to 0
+
+
+        a0muls[1] = a.word[0];
+        a1muls[1] = a.word[1];
+
+        // a*x, a*x^2, a*x^3
+        for (int i = 2; i<=8; i*=2) {
+            // multiply a*x^{log_2 i/2} by x to get a*x^{log_2 i}
+            int prev = i / 2;
+            a0muls[i] = a0muls[prev] << 1;
+            a1muls[i] = (a1muls[prev] << 1) | (a0muls[prev] >>> 63);
+            // mod reduce
+            a0muls[i] ^= irredMuls[(int) (a1muls[prev] >>> 63)];
+        }
+
+        // a*(x+1)
+        a0muls[3] = a0muls[1] ^ a0muls[2];
+        a1muls[3] = a1muls[1] ^ a1muls[2];
+
+        // a*(x^2+1), a*(x^2+x), a*(x^2+x+1)
+        for (int i = 1; i<4; i++) {
+            a0muls[4|i] = a0muls[4]^a0muls[i];
+            a1muls[4|i] = a1muls[4]^a1muls[i];
+        }
+
+        // a*(x^3+1), a*(x^3+x), a*(x^3+x+1), a*(x^3+x^2), a*(x^3+x^2+1), a*(x^3+x^2+x), a*(x^3+x^2+x+1)
+        for (int i = 1; i<8; i++) {
+            a0muls[8|i] = a0muls[8]^a0muls[i];
+            a1muls[8|i] = a1muls[8]^a1muls[i];
+        }
+
+        long w0 = 0, w1=0;
+        for (int j = 1; j>=0; j--) {
+            long multiplier = b.word[j];
+            for (int i = 60; i >= 0; i -= 4) {
+                // Multiply by x^4
+                int modReduceIndex = (int) (w1 >>> 60);
+                w1 = (w1 << 4) | (w0 >>> 60);
+                // MOD REDUCE ACCORDING TO modReduceIndex by XORing the right value
+                w0 = (w0 << 4) ^ irredMuls[modReduceIndex];
+
+                // Add the correct multiple of a
+                int index = (int) ((multiplier >>> i) & 15);
+                w0 ^= a0muls[index];
+                w1 ^= a1muls[index];
+            }
+        }
+        res.word[0] = w0;
+        res.word[1] = w1;
+    }
 
 
     /**
      * Computes a times b and puts the result into res.
      * Uses no branching or data-dependent table lookups, to reduce exposure to side-channel attacks
      * when secrecy of a or b needs to be protected.
+     *
      * @param res output; must be not null; may be equal to a and/or b
-     * @param a multiplicand; may be equal to res, in which case will get overwritten
-     * @param b multiplier; may be equal to res, in which case will get overwritten
+     * @param a   multiplicand; may be equal to res, in which case will get overwritten
+     * @param b   multiplier; may be equal to res, in which case will get overwritten
      */
 
-    public static void mul(GF2_128 res, GF2_128 a, GF2_128 b) {
-        long [] t = new long[2];
-        long [] r = new long[4];
-
-        // Standard Karatsuba multiplication
-        // (A1x^64+A0)(B1x^64+B0) = A1B1 x^128 + (A1B0+A0B1)x^64 + A0B0 =
-        // (A1+A0)(B1+B0)x^64 + A1B1(x^128-x^64) + A0B0(1-x^64) (plus is the same as minus -- just XOR -- in GF(2^128)
-        //
-        // Since we operate on 64 bits at a time, this becomes
-        // r[3] = highTerm[1];
-        // r[2] = highTerm[1]^highTerm[0]^midTerm[1]^lowTerm[1];
-        // r[1] = highTerm[0]^midTerm[0]^lowTerm[1]^lowTerm[0];
-        // r[0] = lowTerm[0];
-
-        // high term
-        karmul64(t, a.word[1], b.word[1]);
-        r[3] = t[1];
-        r[2] = t[1]^t[0];
-        r[1] = t[0];
-
-        // middle term
-        karmul64(t,a.word[1]^a.word[0], b.word[1]^b.word[0]);
-        r[2] ^= t[1];
-        r[1] ^= t[0];
-
-        // low term
-        karmul64(t, a.word[0], b.word[0]);
-        r[2] ^= t[1];
-        r[1] ^= t[1]^t[0];
-        r[0] = t[0];
-
-        // Now do a modular reduction. Strategy:
-        // 1. multiply the highest-order word by x^64 times the modulus x^128+x^7+x^2+x+1 and xor the result in
-        //    (this will 0 out the highest order word, so we won't even compute it -- we'll just compute the other
-        //    affected words -- which are the middle two words)
-        //
-        // 2. multiply the second-highest-order word by the modulus x^128+x^7+x^2+x+1 and xor the result in
-        //    (this will 0 out the second-highest order word, so we won't even compute it -- we'll just compute
-        //    the other affected words -- which are the last two words)
-        //
-        for (int i = 3; i>=2; i--) {
-            long w = r[i];
-
-            // Compute the second-lowest-order word of m*modulus and xor it into the appropriate word of r
-            long s = (w>>>57)^(w>>>62)^(w>>>63);
-            r[i-1]^=s;
-
-            // Compute the lowest-order word of m*modulus and xor it into the appropriate word of r
-            s = w^(w<<1)^(w<<2)^(w<<7);
-            r[i-2] ^= s;
-        }
-        // Now the result is contained in the last two words
-        res.word[1] = r[1];
-        res.word[0] = r[0];
-    }
+//    public static void mul(GF2_128 res, GF2_128 a, GF2_128 b) {
+//        long[] t = new long[2];
+//        long[] r = new long[4];
+//
+//        // Standard Karatsuba multiplication
+//        // (A1x^64+A0)(B1x^64+B0) = A1B1 x^128 + (A1B0+A0B1)x^64 + A0B0 =
+//        // (A1+A0)(B1+B0)x^64 + A1B1(x^128-x^64) + A0B0(1-x^64) (plus is the same as minus -- just XOR -- in GF(2^128)
+//        //
+//        // Since we operate on 64 bits at a time, this becomes
+//        // r[3] = highTerm[1];
+//        // r[2] = highTerm[1]^highTerm[0]^midTerm[1]^lowTerm[1];
+//        // r[1] = highTerm[0]^midTerm[0]^lowTerm[1]^lowTerm[0];
+//        // r[0] = lowTerm[0];
+//
+//        // high term
+//        karmul64(t, a.word[1], b.word[1]);
+//        r[3] = t[1];
+//        r[2] = t[1] ^ t[0];
+//        r[1] = t[0];
+//
+//        // middle term
+//        karmul64(t, a.word[1] ^ a.word[0], b.word[1] ^ b.word[0]);
+//        r[2] ^= t[1];
+//        r[1] ^= t[0];
+//
+//        // low term
+//        karmul64(t, a.word[0], b.word[0]);
+//        r[2] ^= t[1];
+//        r[1] ^= t[1] ^ t[0];
+//        r[0] = t[0];
+//
+//        // Now do a modular reduction. Strategy:
+//        // 1. multiply the highest-order word by x^64 times the modulus x^128+x^7+x^2+x+1 and xor the result in
+//        //    (this will 0 out the highest order word, so we won't even compute it -- we'll just compute the other
+//        //    affected words -- which are the middle two words)
+//        //
+//        // 2. multiply the second-highest-order word by the modulus x^128+x^7+x^2+x+1 and xor the result in
+//        //    (this will 0 out the second-highest order word, so we won't even compute it -- we'll just compute
+//        //    the other affected words -- which are the last two words)
+//        //
+//        for (int i = 3; i >= 2; i--) {
+//            long w = r[i];
+//
+//            // Compute the second-lowest-order word of m*modulus and xor it into the appropriate word of r
+//            long s = (w >>> 57) ^ (w >>> 62) ^ (w >>> 63);
+//            r[i - 1] ^= s;
+//
+//            // Compute the lowest-order word of m*modulus and xor it into the appropriate word of r
+//            s = w ^ (w << 1) ^ (w << 2) ^ (w << 7);
+//            r[i - 2] ^= s;
+//        }
+//        // Now the result is contained in the last two words
+//        res.word[1] = r[1];
+//        res.word[0] = r[0];
+//    }
 
     /**
      * Multiplies (without any modular reduction) two 64-bit polynomials over GF(2)
+     *
      * @param r The resulting 128-bit polynomial will be in r[1] and r[0] (r must have length at least 2)
      * @param a 64-bit multiplicand
      * @param b 64-bit multiplier
      */
-    private static void karmul64(long [] r, long a, long b) {
+    private static void karmul64(long[] r, long a, long b) {
         // Standard Karatsuba multiplication
         // (A1x^32+A0)(B1x^32+B0) = A1B1 x^64 + (A1B0+A0B1)x^32 + A0B0 =
         // (A1+A0)(B1+B0)x^32 + A1B1(x^64-x^32) + A0B0(1-x^32) (plus is the same as minus -- just XOR -- in GF(2^128)
-        long b1 = b>>>32;
-        long b0 = b&0xFFFFFFFFL;
-        long a1 = a>>>32;
-        long a0 = a&0xFFFFFFFFL;
+        long b1 = b >>> 32;
+        long b0 = b & 0xFFFFFFFFL;
+        long a1 = a >>> 32;
+        long a0 = a & 0xFFFFFFFFL;
         long highTerm = karmul32(a1, b1);
-        long midTerm = karmul32(a1^a0, b1^b0);
+        long midTerm = karmul32(a1 ^ a0, b1 ^ b0);
         long lowTerm = karmul32(a0, b0);
-        long t = highTerm^midTerm^lowTerm;
-        r[1] = highTerm^(t>>>32);
-        r[0] = lowTerm^(t<<32);
+        long t = highTerm ^ midTerm ^ lowTerm;
+        r[1] = highTerm ^ (t >>> 32);
+        r[0] = lowTerm ^ (t << 32);
     }
 
     /**
-     *
      * Multiplies (without any modular reduction) two 32-bit polynomials over GF(2)
+     *
      * @param a 32-bit multiplicand (contained in bits 0-31; bits 32-63 must be 0)
      * @param b 32-bit multiplier (contained in bits 0-31; bits 32-63 must be 0)
      * @return 64-bit result
      */
     private static long karmul32(long a, long b) {
         long res = 0L;
-        for (int i=31; i>=0; i--) {
-            res<<=1;
-            res^=a*((b>>>i)&1);
+        for (int i = 31; i >= 0; i--) {
+            res <<= 1;
+            res ^= a * ((b >>> i) & 1);
         }
         return res;
     }
 
     /**
      * Computes a times b and puts the result into res. More efficient than mul(res, a, new GF2_128(b))
+     *
      * @param res output; must be not null; may be equal to a and/or b
-     * @param a multiplicand; may be equal to res, in which case will get overwritten
-     * @param b multiplier; may be equal to res, in which case will get overwritten
+     * @param a   multiplicand; may be equal to res, in which case will get overwritten
+     * @param b   multiplier; may be equal to res, in which case will get overwritten
      */
 
-    public static void mul (GF2_128 res, GF2_128 a, byte b) {
+    public static void mul(GF2_128 res, GF2_128 a, byte b) {
 
         long w0 = 0, w1 = 0, w2 = 0;
 
@@ -384,12 +388,13 @@ public class GF2_128 {
 
 
     /**
-         * Computes z^{-1} and puts the result into res.
-         * @param res output; must be not null; may be equal to z
-         * @param z input to be raised to 2^16; may be equal to res, in which case will get overwritten
-         */
+     * Computes z^{-1} and puts the result into res.
+     *
+     * @param res output; must be not null; may be equal to z
+     * @param z   input to be raised to 2^16; may be equal to res, in which case will get overwritten
+     */
 
-    public static void invert (GF2_128 res, GF2_128 z) {
+    public static void invert(GF2_128 res, GF2_128 z) {
         // Computes z^{2^128-2} = z^{exponent written in binary as 127 ones followed by a single zero}
         // (by Fermat's little theorem, this is the correct inverse)
 
@@ -408,7 +413,7 @@ public class GF2_128 {
         // zTo2ToK1s contains z raised to the power whose binary representation is 2^k ones
         // zTo2ToK1s2ToK0s contains z raised to the power whose binary representation is 2^k ones followed by 2^k zeros
         int k = 0;
-        while (k<6) {
+        while (k < 6) {
             k++;
             // Fill in the zeros in the exponent of zTo2ToK1s2ToK0s with ones
             mul(zTo2ToK1s, zTo2ToK1s2ToK0s, zTo2ToK1s);
@@ -521,8 +526,9 @@ public class GF2_128 {
      * Squares z and puts the result into res. Same as power2To2ToK(res, z, 0).
      * About the same efficiency as mul(res, z, z) (more efficient implementations are possible,
      * but not provided here because of risk of side-channel attacks)
+     *
      * @param res output; must be not null; may be equal to z
-     * @param z input to be squared; may be equal to res, in which case will get overwritten
+     * @param z   input to be squared; may be equal to res, in which case will get overwritten
      */
 
     public static void sqr(GF2_128 res, GF2_128 z) {
@@ -539,12 +545,13 @@ public class GF2_128 {
      * Raises z to the power 2^{2^k} and puts the result into res. Same sqr(z, z) 2^k times.
      * Takes only about as much time as mul(res, z, z) (even more efficient implementations are possible,
      * but not provided here because of risk of side-channel attacks)
+     *
      * @param res output; must be not null; may be equal to z
-     * @param z input to be squared; may be equal to res, in which case will get overwritten
+     * @param z   input to be squared; may be equal to res, in which case will get overwritten
      */
 
     public static void power2To2ToK(GF2_128 res, GF2_128 z, int k) {
-        if (k>=7) {
+        if (k >= 7) {
             // By Fermat's little theorem, z^{2^{2^k}} = z^{2^{2^k} mod (2^{128}-1)}
             // If k>=7, then 2^{2^k} mod (2^{128}-1) = 1 (proof below), and so z^{2^{2^k)} = z^1 = z,
             // so we just copy z into res.
@@ -555,8 +562,7 @@ public class GF2_128 {
             // 2^{2^k}-1 and thus 2^{2^k}-1 is divisible by 2^128 - 1.
             res.word[0] = z.word[0];
             res.word[1] = z.word[1];
-        }
-        else {
+        } else {
             // powTable0[k][i] contains the result of raising x^i to the power 2^k for i = 0...63
             // powTable1[k][i-64] contains the result of raising x^i to the power 2^k for i = 64...127
             // Because raising to the power 2^k is linear over any field of characteristic 2,
@@ -588,11 +594,10 @@ public class GF2_128 {
     }
 
     /**
-     *
      * @return bits of this in hexadecimal notation, most significant on the left
      */
     public String toString() {
-       return String.format("%016X", word[1])+String.format("%016X", word[0]);
+        return String.format("%016X", word[1]) + String.format("%016X", word[0]);
     }
 }
 
