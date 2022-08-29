@@ -1,5 +1,4 @@
-import ciphers.SimonEngine;
-import ciphers.SpeckEngine;
+import ciphers.Speck;
 import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -27,7 +26,7 @@ public class SpeckTest {
         System.out.println(TestUtils.bytesToHex(plaintext));
         System.out.println();
 
-        SpeckEngine speck = new SpeckEngine(64, key);
+        Speck speck = new Speck(64, key);
 
         byte[] ciphertext2 = speck.encrypt(plaintext);
 
@@ -62,7 +61,7 @@ public class SpeckTest {
         System.out.println(TestUtils.bytesToHex(plaintext));
         System.out.println();
 
-        SpeckEngine speck = new SpeckEngine(64, key);
+        Speck speck = new Speck(64, key);
 
         byte[] ciphertext2 = speck.encrypt(plaintext);
 

@@ -17,7 +17,7 @@ package ciphers;
  * Removed Bouncy Castle dependency
 
 */
-public class SpeckEngine implements Cipher
+public class Speck implements Cipher
 {
     /** Speck32 - 16 bit words, 32 bit block size, 64 bit key */
     public static final int SPECK_32 = 32;
@@ -64,7 +64,7 @@ public class SpeckEngine implements Cipher
                               final int blockSizeBits,
                               final byte[] key,
                               final byte[] io) {
-        SpeckEngine se = new SpeckEngine(blockSizeBits, key);
+        Speck se = new Speck(blockSizeBits, key);
         se.init(forEncryption, key);
         se.processBlock(io, 0, io, 0);
     }
@@ -75,7 +75,7 @@ public class SpeckEngine implements Cipher
      * @param blockSizeBits the block size (2 * the word size) in bits, one of {@link #SPECK_128},
      *            {@link #SPECK_96}, {@link #SPECK_64}, {@link #SPECK_48}, {@link #SPECK_32}.
      */
-    public SpeckEngine(final int blockSizeBits, byte[] key)
+    public Speck(final int blockSizeBits, byte[] key)
     {
         this.KEY = key;
         switch (blockSizeBits)

@@ -1,5 +1,4 @@
-import ciphers.SimonEngine;
-import org.junit.Assert;
+import ciphers.Simon;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -83,13 +82,13 @@ public class SimonTest {
 
         byte[] plaintext1 = Arrays.copyOf(io64, io64.length);
 
-        byte[] ciphertext = SimonEngine.encrypt1(64, key64, io64);
+        byte[] ciphertext = Simon.encrypt1(64, key64, io64);
 
         System.out.print("Ciphertext: ");
         System.out.println(TestUtils.bytesToHex(ciphertext));
         System.out.println();
 
-        byte[] plaintext2 = SimonEngine.decrypt1(64, key64, ciphertext);
+        byte[] plaintext2 = Simon.decrypt1(64, key64, ciphertext);
 
         System.out.print("Plaintext (decryption): ");
         System.out.println(TestUtils.bytesToHex(io64));
@@ -119,7 +118,7 @@ public class SimonTest {
         System.out.println(TestUtils.bytesToHex(plaintext));
         System.out.println();
 
-        SimonEngine simon = new SimonEngine(128, key);
+        Simon simon = new Simon(128, key);
 
         byte[] ciphertext2 = simon.encrypt(plaintext);
 

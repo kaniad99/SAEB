@@ -11,7 +11,7 @@ import java.util.Arrays;
  * during
  */
 
-public class SimonEngine implements Cipher {
+public class Simon implements Cipher {
     //dd if=originalimage.bmp of=encryptedfilename.bmp bs=1 count=54 conv=notrunc
     /**
      * Simon32 - 16 bit words, 32 bit block size, 64 bit key
@@ -66,7 +66,7 @@ public class SimonEngine implements Cipher {
                                 final int blockSizeBits,
                                 final byte[] key,
                                 final byte[] io) {
-        SimonEngine se = new SimonEngine(blockSizeBits, key);
+        Simon se = new Simon(blockSizeBits, key);
         se.init(forEncryption, key);
         se.processBlock(io, 0, io, 0);
         return io;
@@ -79,7 +79,7 @@ public class SimonEngine implements Cipher {
      * @param blockSizeBits the block size (2 * the word size) in bits, one of {@link #SIMON_128},
      *                      {@link #SIMON_96}, {@link #SIMON_64}, {@link #SIMON_48}, {@link #SIMON_32}.
      */
-    public SimonEngine(final int blockSizeBits, byte[] key) {
+    public Simon(final int blockSizeBits, byte[] key) {
         KEY = Arrays.copyOf(key, key.length);
         switch (blockSizeBits) {
             case SIMON_32:

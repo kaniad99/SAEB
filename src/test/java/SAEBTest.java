@@ -1,5 +1,5 @@
 import ciphers.AES;
-import ciphers.SimonEngine;
+import ciphers.Simon;
 import org.junit.Test;
 import saeb.SAEB;
 import saeb.SAEBResult;
@@ -40,7 +40,7 @@ public class SAEBTest {
         int r1 = 10;
         int t = 5;
 
-        SimonEngine simon = new SimonEngine(128, KEY.getBytes());
+        Simon simon = new Simon(128, KEY.getBytes());
 
         SAEB saeb = new SAEB(n, r1, r, t, simon);
 
