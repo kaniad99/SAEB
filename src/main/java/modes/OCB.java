@@ -50,7 +50,9 @@ public class OCB {
         return sum;
     }
 
-    public byte[] encrypt(byte[] nonce, byte[] associatedData, byte[] plaintext) {
+
+
+    public OCBResult coreEncrypt(byte[] nonce, byte[] associatedData, byte[] plaintext) {
         byte[] lInit = cipher.encrypt(new byte[n]);
         byte[] lDollar = toDouble(lInit);
         byte[] l0 = toDouble(lDollar);
@@ -126,20 +128,20 @@ public class OCB {
             System.out.println("Checksum: " + bytesToHex(checksum));
         }
 
-//        byte[] tag = xorBlocks(xorBlocks(cipher.encrypt(xorBlocks(checksum, offset)), l0), hash(associatedData));
-//        System.out.println("TAG: " + bytesToHex(tag));
-//
-//        try {
-//            ciphertextStream.write(tag);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
+        byte[] tempo = xorBlocks(xorBlocks(checksum, offset), lDollar);
+        byte[] tag = xorBlocks(cipher.encrypt(tempo), hash(associatedData));
+        System.out.println("TAG: " + bytesToHex(tag));
 
-        return ciphertextStream.toByteArray();
+        return new OCBResult(ciphertextStream.toByteArray(), Arrays.copyOf(tag, t));
 
     }
 
-    public byte[] decrypt(byte[] nonce, byte[] associatedData, byte[] ciphertext) {
+    public byte[] decrypt(byte[] nonce, byte[] associatedData, byte[] ciphertext){
+        OCBResult result = coreDecrypt(nonce, associatedData, ciphertext);
+
+        return result.getResult();
+    }
+    public OCBResult coreDecrypt(byte[] nonce, byte[] associatedData, byte[] ciphertext) {
         byte[] lInit = cipher.encrypt(new byte[n]);
         byte[] lDollar = toDouble(lInit);
         byte[] l0 = toDouble(lDollar);
@@ -217,16 +219,11 @@ public class OCB {
             System.out.println("Checksum: " + bytesToHex(checksum));
         }
 
-//        byte[] tag = xorBlocks(xorBlocks(cipher.encrypt(xorBlocks(checksum, offset)), l0), hash(associatedData));
-//        System.out.println("TAG: " + bytesToHex(tag));
-//
-//        try {
-//            plaintextStream.write(tag);
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
+        byte[] tag = xorBlocks(xorBlocks(cipher.encrypt(xorBlocks(checksum, offset)), l0), hash(associatedData));
+        System.out.println("TAG: " + bytesToHex(tag));
 
-        return plaintextStream.toByteArray();
+
+        return new OCBResult(plaintextStream.toByteArray(), tag);
 
     }
 
