@@ -6,8 +6,8 @@ import saeb.SAEBResult;
 
 import java.io.ByteArrayOutputStream;
 
-import static org.example.Main.hexStringToByteArray;
 import static org.junit.Assert.assertEquals;
+import static utils.Utils.hexStringToByteArray;
 
 public class SAEBComponentTest {
 

@@ -7,9 +7,8 @@ import ciphers.Speck;
 import modes.OCB;
 import org.apache.commons.lang3.RandomUtils;
 import org.openjdk.jmh.annotations.*;
-import saeb.SAEB;
 
-import static org.example.Main.hexStringToByteArray;
+import static utils.Utils.hexStringToByteArray;
 
 @State(Scope.Benchmark)
 public class OCBExecutionPlan {

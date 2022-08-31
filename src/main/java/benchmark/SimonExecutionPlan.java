@@ -4,7 +4,7 @@ import ciphers.Simon;
 import org.apache.commons.lang3.RandomUtils;
 import org.openjdk.jmh.annotations.*;
 
-import static org.example.Main.hexStringToByteArray;
+import static utils.Utils.hexStringToByteArray;
 
 @State(Scope.Benchmark)
 public class SimonExecutionPlan {
