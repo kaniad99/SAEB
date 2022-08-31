@@ -59,19 +59,19 @@ public class OCB {
         byte[] l = Arrays.copyOf(l0, n);
 
 
-        System.out.println("L_*: " + bytesToHex(lInit));
-        System.out.println("L_$: " + bytesToHex(lDollar));
-        System.out.println("L0: " + bytesToHex(l0));
+//        System.out.println("L_*: " + bytesToHex(lInit));
+//        System.out.println("L_$: " + bytesToHex(lDollar));
+//        System.out.println("L0: " + bytesToHex(l0));
 
         ByteArrayOutputStream ciphertextStream = new ByteArrayOutputStream();
 
         int bottom = nonce[nonce.length - 1] & 0b00111111;
-        System.out.println("Bottom: " + bottom);
+//        System.out.println("Bottom: " + bottom);
 
         byte[] temp = Arrays.copyOf(nonce, n);
         temp[temp.length - 1] = (byte) (temp[temp.length - 1] & 0b11000000);
         byte[] kTop = cipher.encrypt(temp);
-        System.out.println("kTop: " + bytesToHex(kTop));
+//        System.out.println("kTop: " + bytesToHex(kTop));
 
         ByteArrayOutputStream stretchStream = new ByteArrayOutputStream();
         try {
@@ -81,10 +81,10 @@ public class OCB {
             throw new RuntimeException(e);
         }
         byte[] stretch = stretchStream.toByteArray();
-        System.out.println("Stretch: " + bytesToHex(stretch));
+//        System.out.println("Stretch: " + bytesToHex(stretch));
 
         byte[] offset = getOffset(stretch, bottom);
-        System.out.println("Offset: " + bytesToHex(offset));
+//        System.out.println("Offset: " + bytesToHex(offset));
         byte[] checksum = new byte[16];
 
 
@@ -95,7 +95,7 @@ public class OCB {
 
             byte[] temp1 = lFunction(l0, (i / n) + 1);
             offset = xorBlocks(offset, temp1);
-            System.out.println("Offset: " + bytesToHex(offset));
+//            System.out.println("Offset: " + bytesToHex(offset));
 
             try {
                 ciphertextStream.write(xorBlocks(offset, cipher.encrypt(xorBlocks(plaintextBlock, offset))));
@@ -104,13 +104,13 @@ public class OCB {
             }
 
             checksum = xorBlocks(checksum, plaintextBlock);
-            System.out.println("Checksum: " + bytesToHex(checksum));
+//            System.out.println("Checksum: " + bytesToHex(checksum));
         }
 
         int dif = plaintext.length - i;
         if (dif != 0) {
             offset = xorBlocks(offset, lInit);
-            System.out.println("Offset: " + bytesToHex(offset));
+//            System.out.println("Offset: " + bytesToHex(offset));
             byte[] pad = cipher.encrypt(offset);
 
             plaintextBlock = Arrays.copyOfRange(plaintext, i, i + dif);
@@ -125,12 +125,12 @@ public class OCB {
             plaintextFull[dif] = (byte) 0x80;
 
             checksum = xorBlocks(checksum, plaintextFull);
-            System.out.println("Checksum: " + bytesToHex(checksum));
+//            System.out.println("Checksum: " + bytesToHex(checksum));
         }
 
         byte[] tempo = xorBlocks(xorBlocks(checksum, offset), lDollar);
         byte[] tag = xorBlocks(cipher.encrypt(tempo), hash(associatedData));
-        System.out.println("TAG: " + bytesToHex(tag));
+//        System.out.println("TAG: " + bytesToHex(tag));
 
         return new OCBResult(ciphertextStream.toByteArray(), Arrays.copyOf(tag, t));
 
@@ -281,7 +281,6 @@ public class OCB {
         if (firstBit == 1) {
             add[add.length - 1] = (byte) 0b10000111;
         }
-        System.out.println("Add: " + bytesToHex(add));
         temp = xorBlocks(temp, add);
         return temp;
     }

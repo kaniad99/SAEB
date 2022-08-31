@@ -61,7 +61,7 @@ public class SpeckTest {
         System.out.println(TestUtils.bytesToHex(plaintext));
         System.out.println();
 
-        Speck speck = new Speck(64, key);
+        Speck speck = new Speck(128, key);
 
         byte[] ciphertext2 = speck.encrypt(plaintext);
 

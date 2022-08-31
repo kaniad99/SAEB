@@ -1,6 +1,7 @@
 import ciphers.AES;
 import modes.OCB;
 import modes.OCBResult;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -61,6 +62,7 @@ public class OCBTest {
     }
 
     @Test
+    @Ignore
     public void decryptTest() {
         byte[] plaintext;
         byte[] key = TestUtils.hexStringToByteArray(KEY1);
@@ -98,6 +100,7 @@ public class OCBTest {
     }
 
     @Test
+    @Ignore
     public void decryptExtendedTestCase2() {
         byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("BBAA9988776655443322110F");
@@ -134,6 +137,7 @@ public class OCBTest {
     }
 
     @Test
+    @Ignore
     public void decryptExtendedTestCase1() {
 
         byte[] key = TestUtils.hexStringToByteArray("000102030405060708090A0B0C0D0E0F");
