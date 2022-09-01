@@ -1,9 +1,5 @@
 package ciphers;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Arrays;
-
 public class AES implements Cipher {
     // current round index
     private int actual;
@@ -144,11 +140,9 @@ public class AES implements Cipher {
     }
 
     // Cipher/Decipher methods
-    private int[][] cipher(int[][] in, int[][] out) {
+    private void cipher(int[][] in, int[][] out) {
         for (int i = 0; i < in.length; i++) {
-            for (int j = 0; j < in.length; j++) {
-                out[i][j] = in[i][j];
-            }
+            System.arraycopy(in[i], 0, out[i], 0, in.length);
         }
         actual = 0;
         addRoundKey(out, actual);
@@ -162,14 +156,11 @@ public class AES implements Cipher {
         subBytes(out);
         shiftRows(out);
         addRoundKey(out, actual);
-        return out;
     }
 
-    private int[][] decipher(int[][] in, int[][] out) {
+    private void decipher(int[][] in, int[][] out) {
         for (int i = 0; i < in.length; i++) {
-            for (int j = 0; j < in.length; j++) {
-                out[i][j] = in[i][j];
-            }
+            System.arraycopy(in[i], 0, out[i], 0, in.length);
         }
         actual = Nr;
         addRoundKey(out, actual);
@@ -183,7 +174,6 @@ public class AES implements Cipher {
         invShiftRows(out);
         invSubBytes(out);
         addRoundKey(out, actual);
-        return out;
 
     }
 
@@ -398,13 +388,12 @@ public class AES implements Cipher {
         return state;
     }
 
-    private int[][] subBytes(int[][] state) {
+    private void subBytes(int[][] state) {
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < Nb; j++) {
                 state[i][j] = subWord(state[i][j]) & 0xFF;
             }
         }
-        return state;
     }
 
     private static int subWord(int word) {
@@ -432,63 +421,4 @@ public class AES implements Cipher {
         return result;
     }
 
-    // Public methods
-    public byte[] ECB_encrypt(byte[] text) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        for (int i = 0; i < text.length; i+=16) {
-            try {
-                out.write(encrypt(Arrays.copyOfRange(text, i, i + 16)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return out.toByteArray();
-    }
-
-    public byte[] ECB_decrypt(byte[] text) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        for (int i = 0; i < text.length; i+=16) {
-            try {
-                out.write(decrypt(Arrays.copyOfRange(text, i, i + 16)));
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return out.toByteArray();
-    }
-
-    public byte[] CBC_encrypt(byte[] text) {
-        byte[] previousBlock = null;
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        for (int i = 0; i < text.length; i+=16) {
-            byte[] part = Arrays.copyOfRange(text, i, i + 16);
-            try {
-                if (previousBlock == null) previousBlock = iv;
-                part = xor(previousBlock, part);
-                previousBlock = encrypt(part);
-                out.write(previousBlock);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return out.toByteArray();
-    }
-
-    public byte[] CBC_decrypt(byte[] text) {
-        byte[] previousBlock = null;
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        for (int i = 0; i < text.length; i+=16) {
-            byte[] part = Arrays.copyOfRange(text, i, i + 16);
-            byte[] tmp = decrypt(part);
-            try {
-                if (previousBlock == null) previousBlock = iv;
-                tmp = xor(previousBlock, tmp);
-                previousBlock = part;
-                out.write(tmp);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return out.toByteArray();
-    }
 }
