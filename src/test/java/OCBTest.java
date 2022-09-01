@@ -41,6 +41,49 @@ public class OCBTest {
         assertEquals("30b0f6e92367359bf558398a12ef794f", TestUtils.bytesToHex(state));
     }
 
+
+
+    @Test
+    public void encryptTest123() {
+        byte[] ciphertext;
+        byte[] key = TestUtils.hexStringToByteArray(KEY1);
+        byte[] nonce = TestUtils.hexStringToByteArray("BBAA99887766554433221101");
+        byte[] associated = TestUtils.hexStringToByteArray("0001020304050607");
+        byte[] plaintext = TestUtils.hexStringToByteArray("0001020304050607000102030405060700010203040506070001020304050607");
+
+        int nonceLength = nonce.length;
+
+        nonce = getNonce(nonce);
+
+        OCB ocb = new OCB(16, new AES(key));
+
+        OCBResult result = ocb.coreEncrypt(nonce, associated, plaintext);
+
+        assertEquals("e1463e8dba276a7c3b32c3a013c40024b1c0f12fe90c1bdaafa6b508cff48509", TestUtils.bytesToHex(result.getResult()));
+        assertEquals("a0940fdf21e99717531149429bec3dad", TestUtils.bytesToHex(result.getTag()));
+    }
+
+
+    @Test
+    public void decryptTest123() {
+        byte[] ciphertext;
+        byte[] key = TestUtils.hexStringToByteArray(KEY1);
+        byte[] nonce = TestUtils.hexStringToByteArray("BBAA99887766554433221101");
+        byte[] associated = TestUtils.hexStringToByteArray("0001020304050607");
+        byte[] plaintext = TestUtils.hexStringToByteArray("e1463e8dba276a7c3b32c3a013c40024b1c0f12fe90c1bdaafa6b508cff48509");
+
+        int nonceLength = nonce.length;
+
+        nonce = getNonce(nonce);
+
+        OCB ocb = new OCB(16, new AES(key));
+
+        OCBResult result = ocb.coreDecrypt(nonce, associated, plaintext);
+
+        assertEquals("0001020304050607000102030405060700010203040506070001020304050607", TestUtils.bytesToHex(result.getResult()));
+        assertEquals("a0940fdf21e99717531149429bec3dad", TestUtils.bytesToHex(result.getTag()));
+    }
+
     @Test
     public void encryptTest() {
         byte[] ciphertext;
