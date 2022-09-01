@@ -132,8 +132,15 @@ public class OCB {
 
         byte[] tempo = xorBlocks(xorBlocks(checksum, offset), lDollar);
         byte[] tag = xorBlocks(cipher.encrypt(tempo), hash(associatedData));
-//        System.out.println("TAG: " + bytesToHex(tag));
 
+
+        System.out.println("////////////////////////////TAG PARAMETERS////////////////////////");
+        System.out.println("Checksum: " + bytesToHex(checksum));
+        System.out.println("Offset: " + bytesToHex(offset));
+        System.out.println("Lo: " + bytesToHex(l0));
+        System.out.println("AssociatedData: " + bytesToHex(associatedData));
+        System.out.println("hash(associatedData): " + bytesToHex(associatedData));
+        System.out.println("TAG: " + bytesToHex(tag));
         return new OCBResult(ciphertextStream.toByteArray(), Arrays.copyOf(tag, t));
 
     }
@@ -208,20 +215,30 @@ public class OCB {
 
             ciphertextBlock = Arrays.copyOfRange(ciphertext, i, i + dif);
 
+            byte[] plaintextFull = xorBlocksAndCut(pad, ciphertextBlock);
             try {
-                plaintextStream.write(xorBlocksAndCut(pad, ciphertextBlock));
+                plaintextStream.write(plaintextFull);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
-            byte[] plaintextFull = Arrays.copyOf(ciphertextBlock, 16);
+            plaintextFull = Arrays.copyOf(plaintextFull, 16);
             plaintextFull[dif] = (byte) 0x80;
 
             checksum = xorBlocks(checksum, plaintextFull);
             System.out.println("Checksum: " + bytesToHex(checksum));
         }
 
-        byte[] tag = xorBlocks(xorBlocks(cipher.encrypt(xorBlocks(checksum, offset)), l0), hash(associatedData));
+        System.out.println("////////////////////////////TAG PARAMETERS////////////////////////");
+        System.out.println("Checksum: " + bytesToHex(checksum));
+        System.out.println("Offset: " + bytesToHex(offset));
+        System.out.println("Lo: " + bytesToHex(l0));
+        System.out.println("AssociatedData: " + bytesToHex(associatedData));
+        System.out.println("hash(associatedData): " + bytesToHex(associatedData));
+        byte[] tag = xorBlocks(cipher.encrypt(xorBlocks(xorBlocks(checksum, offset), lDollar)), hash(associatedData));
+//
+//        byte[] tempo = xorBlocks(xorBlocks(checksum, offset), lDollar);
+//        byte[] tag = xorBlocks(cipher.encrypt(tempo), hash(associatedData));
         System.out.println("TAG: " + bytesToHex(tag));
 
 
