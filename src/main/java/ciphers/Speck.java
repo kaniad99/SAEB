@@ -34,16 +34,16 @@ public class Speck implements Cipher
     /** Speck128 - 64 bit words, 128 bit block size, 128/192/256 bit key */
     public static final int SPECK_128 = 128;
 
-    private static byte[] KEY;
+    private static byte[] keyBytes;
 
     private final SpeckCipher cipher;
 
     public byte[] encrypt(byte[] text) {
-        return encrypt1(text.length * 8, KEY, text);
+        return encrypt1(text.length * 8, keyBytes, text);
     }
 
     public byte[] decrypt(byte[] text) {
-        return decrypt1(text.length * 8, KEY, text);
+        return decrypt1(text.length * 8, keyBytes, text);
     }
 
     public static byte[] encrypt1(final int blockSizeBits,
@@ -77,7 +77,7 @@ public class Speck implements Cipher
      */
     public Speck(final int blockSizeBits, byte[] key)
     {
-        this.KEY = key;
+        this.keyBytes = key;
         switch (blockSizeBits)
         {
             case SPECK_32:
@@ -110,12 +110,11 @@ public class Speck implements Cipher
         cipher.init(forEncryption, keyBytes);
     }
 
-    public int processBlock(final byte[] in, final int inOff, final byte[] out, final int outOff)
+    public void processBlock(final byte[] in, final int inOff, final byte[] out, final int outOff)
             throws IllegalArgumentException,
             IllegalStateException
     {
         cipher.processBlock(in, inOff, out, outOff);
-        return cipher.getBlockSize();
     }
 
     /**
@@ -292,9 +291,6 @@ public class Speck implements Cipher
          */
         protected abstract void decryptBlock();
 
-        public void reset()
-        {
-        }
     }
 
     /**
@@ -512,31 +508,13 @@ public class Speck implements Cipher
         }
     }
 
-    /**
-     * Base class of Speck variants that fit in 64 bit Java longs: Speck128, Speck96.
-     * <p>
-     * Speck96 (48 bit word size) is implemented using masking.
-     */
-    private static abstract class SpeckLongCipher
+    private abstract static class SpeckLongCipher
             extends SpeckCipher
     {
-        /**
-         * The expanded key schedule for all {@link SpeckCipher#rounds}.
-         */
         private long[] k;
+        private long x;
+        private long y;
 
-        /**
-         * The 2 words of the working state;
-         */
-        private long x, y;
-
-        /**
-         * Constructs a Speck cipher with <= 64 bit word size, using the standard 8,3 rotation
-         * constants.
-         *
-         * @param wordSize the word size in bytes.
-         * @param baseRounds the base (for 2 word key) round count.
-         */
         protected SpeckLongCipher(int wordSize, int baseRounds)
         {
             super(wordSize, baseRounds, 8, 3);
@@ -577,21 +555,11 @@ public class Speck implements Cipher
             long x = this.x;
             long y = this.y;
 
-            // System.out.printf("pt %016x,%016x\n", x, y);
             for (int r = 0; r < rounds; r++)
             {
-                // System.out.printf("ct  %016x,%016x\n", x, y);
-                // System.out.printf("ki  %016x\n", k[r]);
-                // System.out.printf("r1  %016x\n", rotr(x, alpha));
-                // System.out.printf("r2  %016x\n", rotr(x, alpha) + y);
-                // System.out.printf("r3  %016x\n", (rotr(x, alpha) + y) ^ k[r]);
-                // System.out.printf("r4  %016x\n", rotl(y, beta));
-                // System.out.printf("r5  %016x\n", rotl(y, beta) ^ x);
                 x = mask((rotr(x, alpha) + y) ^ k[r]);
                 y = mask(rotl(y, beta) ^ x);
             }
-            // System.out.printf("ctf %016x,%016x\n", x, y);
-            // System.out.printf("etf a65d985179783265,7860fedf5c570d18\n");
 
             this.x = x;
             this.y = y;
@@ -612,37 +580,13 @@ public class Speck implements Cipher
             this.y = y;
         }
 
-        /**
-         * Masks all bits higher than the word size of this cipher in the supplied value.
-         *
-         * @param val the value to mask.
-         * @return the masked value.
-         */
         protected abstract long mask(long val);
 
-        /**
-         * Rotates a word left by the specified distance. <br>
-         * The rotation is on the word size of the cipher instance, not on the full 64 bits of the
-         * long.
-         *
-         * @param i the word to rotate.
-         * @param distance the distance in bits to rotate.
-         * @return the rotated word, which may have unmasked high (> word size) bits.
-         */
         private long rotl(long i, int distance)
         {
             return (i << distance) | (i >>> (wordSizeBits - distance));
         }
 
-        /**
-         * Rotates a word right by the specified distance. <br>
-         * The rotation is on the word size of the cipher instance, not on the full 64 bits of the
-         * long.
-         *
-         * @param i the word to rotate.
-         * @param distance the distance in bits to rotate.
-         * @return the rotated word, which may have unmasked high (> word size) bits.
-         */
         private long rotr(long i, int distance)
         {
             return (i >>> distance) | (i << (wordSizeBits - distance));
@@ -651,9 +595,6 @@ public class Speck implements Cipher
         @Override
         protected void unpackBlock(byte[] in, int inOff)
         {
-            // Reverse word order:
-            // x,y == pt[1], pt[0]
-            // == in[inOff..inOff + wordSize], in[in[inOff + wordSize..inOff + wordSize* 2]
             y = bytesToWord(in, inOff + wordSize);
             x = bytesToWord(in, inOff);
         }
@@ -664,14 +605,6 @@ public class Speck implements Cipher
             wordToBytes(y, out, outOff + wordSize);
             wordToBytes(x, out, outOff);
         }
-
-        /**
-         * Read {@link SpeckCipher#wordSize} bytes from the input data in big-endian order.
-         *
-         * @param bytes the data to read a word from.
-         * @param off the offset to read the word from.
-         * @return the read word, with zeroes in any bits higher than the word size.
-         */
         private long bytesToWord(final byte[] bytes, final int off)
         {
             if ((off + wordSize) > bytes.length)
@@ -679,30 +612,24 @@ public class Speck implements Cipher
                 throw new IllegalArgumentException();
             }
 
-            long word = 0;
+            long word;
             int index = off;
 
-            word = (bytes[index++] & 0xffl);
-            word = (word << 8) | (bytes[index++] & 0xffl);
-            word = (word << 8) | (bytes[index++] & 0xffl);
-            word = (word << 8) | (bytes[index++] & 0xffl);
-            word = (word << 8) | (bytes[index++] & 0xffl);
-            word = (word << 8) | (bytes[index++] & 0xffl);
+            word = (bytes[index++] & 0xffL);
+            word = (word << 8) | (bytes[index++] & 0xffL);
+            word = (word << 8) | (bytes[index++] & 0xffL);
+            word = (word << 8) | (bytes[index++] & 0xffL);
+            word = (word << 8) | (bytes[index++] & 0xffL);
+            word = (word << 8) | (bytes[index++] & 0xffL);
             if (wordSize == 8)
             {
-                word = (word << 8) | (bytes[index++] & 0xffl);
-                word = (word << 8) | (bytes[index++] & 0xffl);
+                word = (word << 8) | (bytes[index++] & 0xffL);
+                word = (word << 8) | (bytes[index++] & 0xffL);
             }
 
             return word;
         }
 
-        /**
-         * Writes {@link SpeckCipher#wordSize} bytes into a buffer in big-endian order.
-         *
-         * @param bytes the buffer to write the word bytes to.
-         * @param off the offset to write the data at.
-         */
         private void wordToBytes(final long word, final byte[] bytes, final int off)
         {
             if ((off + wordSize) > bytes.length)
@@ -726,18 +653,10 @@ public class Speck implements Cipher
 
     }
 
-    /**
-     * Speck32: 2 byte words, 7/2 rotation constants.
-     * <p>
-     * 20 base rounds (hypothetical)
-     * <p>
-     * 64 bit key/22 rounds.
-     */
     private static final class Speck32Cipher
             extends SpeckIntCipher
     {
-
-        protected Speck32Cipher()
+        private Speck32Cipher()
         {
             super(2, 20, 7, 2);
         }
@@ -756,22 +675,13 @@ public class Speck implements Cipher
                 throw new IllegalArgumentException("Speck32 requires a key of 64 bits.");
             }
         }
-
     }
 
-    /**
-     * Speck48: 3 byte words, 8/3 rotation constants.
-     * <p>
-     * 21 base rounds (hypothetical)
-     * <p>
-     * 72 bit key/22 rounds.<br>
-     * 96 bit key/23 rounds.
-     */
     private static final class Speck48Cipher
             extends SpeckIntCipher
     {
 
-        protected Speck48Cipher()
+        private Speck48Cipher()
         {
             super(3, 21);
         }
@@ -793,19 +703,11 @@ public class Speck implements Cipher
 
     }
 
-    /**
-     * Speck64: 4 byte words, 8/3 rotation constants.
-     * <p>
-     * 25 base rounds (hypothetical)
-     * <p>
-     * 96 bit key/26 rounds.<br>
-     * 128 bit key/27 rounds.
-     */
     private static final class Speck64Cipher
             extends SpeckIntCipher
     {
 
-        protected Speck64Cipher()
+        private Speck64Cipher()
         {
             super(4, 25);
         }
@@ -827,14 +729,6 @@ public class Speck implements Cipher
 
     }
 
-    /**
-     * Speck96: 6 byte words, 8/3 rotation constants.
-     * <p>
-     * 28 base rounds
-     * <p>
-     * 96 bit key/28 rounds.<br>
-     * 144 bit key/29 rounds.
-     */
     private static final class Speck96Cipher
             extends SpeckLongCipher
     {
@@ -847,7 +741,7 @@ public class Speck implements Cipher
         @Override
         protected long mask(long val)
         {
-            return (val & 0x0000ffffffffffffl);
+            return (val & 0x0000ffffffffffffL);
         }
 
         @Override
@@ -860,19 +754,9 @@ public class Speck implements Cipher
         }
     }
 
-    /**
-     * Speck128: 8 byte words, 8/3 rotation constants.
-     * <p>
-     * 32 base rounds
-     * <p>
-     * 128 bit key/32 rounds.<br>
-     * 192 bit key/33 rounds.<br>
-     * 256 bit key/34 rounds.
-     */
     private static final class Speck128Cipher
             extends SpeckLongCipher
     {
-
         public Speck128Cipher()
         {
             super(8, 32);
@@ -892,7 +776,5 @@ public class Speck implements Cipher
                 throw new IllegalArgumentException("Speck128 requires a key of 128, 192 or 256 bits.");
             }
         }
-
     }
-
 }

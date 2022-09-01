@@ -66,7 +66,6 @@ public class AESTest {
 
     @Test
     public void AES256RoundTest(){
-        String key1 = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f";
         final String EXPECTED_CIPHERTEXT = "8ea2b7ca516745bfeafc49904b496089";
 
         // Aes-256 test

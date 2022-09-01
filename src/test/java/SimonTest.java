@@ -6,6 +6,7 @@ import java.util.Arrays;
 import static org.junit.Assert.assertArrayEquals;
 
 public class SimonTest {
+//    Test vectors from documentation
 
 //    Simon32/64
 //    Key: 1918 1110 0908 0100
@@ -59,7 +60,7 @@ public class SimonTest {
 
 
     @Test
-    public void testEncryptSimon() {
+    public void simon64128Test() {
         //SIMON 64/128
         //Key: 1b1a1918 13121110 0b0a0908 03020100
         //Plaintext: 656b696c 20646e75
@@ -70,15 +71,6 @@ public class SimonTest {
         final byte[] io64 = {
                 0x65, 0x6b, 0x69, 0x6c, 0x20, 0x64, 0x6e, 0x75
         };
-
-        System.out.println("SIMON 64/128");
-        System.out.print("Key: ");
-        System.out.println(TestUtils.bytesToHex(key64));
-        System.out.println();
-
-        System.out.print("Plaintext (original): ");
-        System.out.println(TestUtils.bytesToHex(io64));
-        System.out.println();
 
         byte[] plaintext1 = Arrays.copyOf(io64, io64.length);
 
@@ -98,42 +90,18 @@ public class SimonTest {
     }
 
     @Test
-    public void anotherEncryptionTest() {
-        //    Simon128/256
-        //    Key: 1f1e1d1c1b1a1918 1716151413121110 0f0e0d0c0b0a0908 0706050403020100
-        //    Plaintext: 74206e69206d6f6f 6d69732061207369
-        //    Ciphertext: 8d2b5579afc8a3a0 3bf72a87efe7b868
-
+    public void simon128256Test() {
         byte[] plaintext = TestUtils.hexStringToByteArray("74206e69206d6f6f6d69732061207369");
         byte[] plaintextBase = TestUtils.hexStringToByteArray("74206e69206d6f6f6d69732061207369");
         byte[] ciphertext = TestUtils.hexStringToByteArray("8d2b5579afc8a3a03bf72a87efe7b868");
         byte[] key = TestUtils.hexStringToByteArray("1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100");
 
-        System.out.println("SIMON 64/128");
-        System.out.print("Key: ");
-        System.out.println(TestUtils.bytesToHex(key));
-        System.out.println();
-
-        System.out.print("Plaintext (original): ");
-        System.out.println(TestUtils.bytesToHex(plaintext));
-        System.out.println();
-
         Simon simon = new Simon(128, key);
 
         byte[] ciphertext2 = simon.encrypt(plaintext);
-
         assertArrayEquals(ciphertext, ciphertext2);
 
-        System.out.print("Ciphertext: ");
-        System.out.println(TestUtils.bytesToHex(ciphertext));
-        System.out.println();
-
         byte[] plaintext2 = simon.decrypt(ciphertext);
-
-        System.out.print("Plaintext (decryption): ");
-        System.out.println(TestUtils.bytesToHex(plaintext2));
-        System.out.println();
-
         assertArrayEquals(plaintextBase, plaintext2);
     }
 }

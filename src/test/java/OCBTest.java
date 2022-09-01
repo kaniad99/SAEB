@@ -1,7 +1,6 @@
 import ciphers.AES;
 import modes.OCB;
 import modes.OCBResult;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -10,7 +9,6 @@ import static org.junit.Assert.assertEquals;
 
 public class OCBTest {
     private static final String KEY1 = "000102030405060708090A0B0C0D0E0F";
-    private static final String NONCE = "BBAA9988776655443322110F";
 
     @Test
     public void doubleTest() {
@@ -44,14 +42,11 @@ public class OCBTest {
 
 
     @Test
-    public void encryptTest123() {
-        byte[] ciphertext;
+    public void encryptTestCase1() {
         byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("BBAA99887766554433221101");
         byte[] associated = TestUtils.hexStringToByteArray("0001020304050607");
         byte[] plaintext = TestUtils.hexStringToByteArray("0001020304050607000102030405060700010203040506070001020304050607");
-
-        int nonceLength = nonce.length;
 
         nonce = getNonce(nonce);
 
@@ -65,14 +60,11 @@ public class OCBTest {
 
 
     @Test
-    public void decryptTest123() {
-        byte[] ciphertext;
+    public void decryptTestCase1() {
         byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("BBAA99887766554433221101");
         byte[] associated = TestUtils.hexStringToByteArray("0001020304050607");
         byte[] plaintext = TestUtils.hexStringToByteArray("e1463e8dba276a7c3b32c3a013c40024b1c0f12fe90c1bdaafa6b508cff48509");
-
-        int nonceLength = nonce.length;
 
         nonce = getNonce(nonce);
 
@@ -85,14 +77,11 @@ public class OCBTest {
     }
 
     @Test
-    public void encryptTest() {
-        byte[] ciphertext;
+    public void encryptTestCase2() {
         byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("BBAA99887766554433221101");
         byte[] associated = TestUtils.hexStringToByteArray("0001020304050607");
         byte[] plaintext = TestUtils.hexStringToByteArray("0001020304050607");
-
-        int nonceLength = nonce.length;
 
         nonce = getNonce(nonce);
 
@@ -105,15 +94,11 @@ public class OCBTest {
     }
 
     @Test
-    @Ignore
-    public void decryptTest() {
-        byte[] plaintext;
+    public void decryptTestCase2() {
         byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("BBAA99887766554433221101");
         byte[] associated = TestUtils.hexStringToByteArray("0001020304050607");
         byte[] ciphertext = TestUtils.hexStringToByteArray("6820b3657b6f615a");
-
-        int nonceLength = nonce.length;
 
         nonce = getNonce(nonce);
 
@@ -121,14 +106,13 @@ public class OCBTest {
 
         OCBResult result = ocb.coreDecrypt(nonce, associated, ciphertext);
 
-        // error in tag creating in decryption
         assertEquals("0001020304050607", TestUtils.bytesToHex(result.getResult()));
         assertEquals("5725bda0d3b4eb3a257c9af1f8f03009", TestUtils.bytesToHex(result.getTag()));
     }
 
     @Test
-    public void encryptExtendedTestCase2() {
-        byte[] key = TestUtils.hexStringToByteArray("000102030405060708090A0B0C0D0E0F");
+    public void encryptTestCase3() {
+        byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("BBAA9988776655443322110F");
         byte[] associated = TestUtils.hexStringToByteArray("");
         byte[] plaintext = TestUtils.hexStringToByteArray("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627");
@@ -143,8 +127,7 @@ public class OCBTest {
     }
 
     @Test
-    @Ignore
-    public void decryptExtendedTestCase2() {
+    public void decryptTestCase3() {
         byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("BBAA9988776655443322110F");
         byte[] associated = TestUtils.hexStringToByteArray("");
@@ -163,9 +146,9 @@ public class OCBTest {
 
     // case taken from documentation
     @Test
-    public void encryptExtendedTestCase1() {
+    public void encryptTestCase4() {
 
-        byte[] key = TestUtils.hexStringToByteArray("000102030405060708090A0B0C0D0E0F");
+        byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("000102030405060708090A0B");
         byte[] associated = TestUtils.hexStringToByteArray("");
         byte[] plaintext = TestUtils.hexStringToByteArray("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627");
@@ -180,10 +163,9 @@ public class OCBTest {
     }
 
     @Test
-    @Ignore
-    public void decryptExtendedTestCase1() {
+    public void decryptTestCase4() {
 
-        byte[] key = TestUtils.hexStringToByteArray("000102030405060708090A0B0C0D0E0F");
+        byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("000102030405060708090A0B");
         byte[] associated = TestUtils.hexStringToByteArray("");
         byte[] plaintext = TestUtils.hexStringToByteArray("bea5e8798dbe7110031c144da0b26122ceaab9b05df771a657149d53773463cb68c65778b058a635");
@@ -194,7 +176,7 @@ public class OCBTest {
         OCBResult result = ocb.coreDecrypt(nonce, associated, plaintext);
 
         // error in tag creating in decryption
-        assertEquals("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627", TestUtils.bytesToHex(result.getResult()));
+        assertEquals("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021222324252627", TestUtils.bytesToHex(result.getResult()));
         assertEquals("060c8467f4abab5e8b3c2067a2e115dc", TestUtils.bytesToHex(result.getTag()));
     }
 
@@ -204,8 +186,8 @@ public class OCBTest {
             nonceStream.write(0x00);
         }
         nonceStream.write(0x01);
-        for (int i = 0; i < nonce.length; i++) {
-            nonceStream.write(nonce[i]);
+        for (byte b : nonce) {
+            nonceStream.write(b);
         }
 
         nonce = nonceStream.toByteArray();

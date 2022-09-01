@@ -3,6 +3,9 @@ package utils;
 public class Utils {
     private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
 
+    private Utils() {
+    }
+
     public static byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
