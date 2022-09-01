@@ -105,7 +105,6 @@ public class OCBTest {
     }
 
     @Test
-    @Ignore
     public void decryptTest() {
         byte[] plaintext;
         byte[] key = TestUtils.hexStringToByteArray(KEY1);
@@ -128,7 +127,7 @@ public class OCBTest {
 
     @Test
     public void encryptExtendedTestCase2() {
-        byte[] key = TestUtils.hexStringToByteArray("000102030405060708090A0B0C0D0E0F");
+        byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("BBAA9988776655443322110F");
         byte[] associated = TestUtils.hexStringToByteArray("");
         byte[] plaintext = TestUtils.hexStringToByteArray("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627");
@@ -143,7 +142,6 @@ public class OCBTest {
     }
 
     @Test
-    @Ignore
     public void decryptExtendedTestCase2() {
         byte[] key = TestUtils.hexStringToByteArray(KEY1);
         byte[] nonce = TestUtils.hexStringToByteArray("BBAA9988776655443322110F");
@@ -180,7 +178,6 @@ public class OCBTest {
     }
 
     @Test
-    @Ignore
     public void decryptExtendedTestCase1() {
 
         byte[] key = TestUtils.hexStringToByteArray("000102030405060708090A0B0C0D0E0F");
@@ -194,7 +191,7 @@ public class OCBTest {
         OCBResult result = ocb.coreDecrypt(nonce, associated, plaintext);
 
         // error in tag creating in decryption
-        assertEquals("000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F2021222324252627", TestUtils.bytesToHex(result.getResult()));
+        assertEquals("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f2021222324252627", TestUtils.bytesToHex(result.getResult()));
         assertEquals("060c8467f4abab5e8b3c2067a2e115dc", TestUtils.bytesToHex(result.getTag()));
     }
 
