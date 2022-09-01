@@ -92,7 +92,7 @@ public class OCB {
 
         byte[] plaintextBlock;
         int i;
-        for (i = 0; i + n < plaintext.length; i += n) {
+        for (i = 0; i + n <= plaintext.length; i += n) {
             plaintextBlock = Arrays.copyOfRange(plaintext, i, i + n);
 
             byte[] temp1 = lFunction(l0, (i / n) + 1);
@@ -181,7 +181,7 @@ public class OCB {
         byte[] ciphertextBlock;
         byte[] plaintextBlock;
         int i;
-        for (i = 0; i + n < ciphertext.length; i += n) {
+        for (i = 0; i + n <= ciphertext.length; i += n) {
             ciphertextBlock = Arrays.copyOfRange(ciphertext, i, i + n);
 
             byte[] temp1 = lFunction(l0, (i / n) + 1);
